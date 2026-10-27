@@ -1,0 +1,95 @@
+.demo {
+  min-height: 100dvh;
+  padding: clamp(var(--ctc-space-5), 4vw, var(--ctc-space-10))
+    clamp(var(--ctc-space-4), 3vw, var(--ctc-space-6)) var(--ctc-space-8);
+}
+
+.demo__import {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ctc-space-1);
+}
+
+.demo__import-label {
+  margin: 0;
+  font-size: var(--ctc-font-size-label);
+  font-weight: var(--ctc-font-weight-semibold);
+  letter-spacing: var(--ctc-tracking-label);
+  text-transform: uppercase;
+  color: var(--ctc-color-muted);
+}
+
+.demo__file-label {
+  display: inline-block;
+  cursor: pointer;
+  font-size: var(--ctc-font-size-meta);
+  font-weight: var(--ctc-font-weight-semibold);
+  color: var(--ctc-color-accent);
+  text-decoration: underline;
+  text-underline-offset: var(--ctc-focus-offset);
+}
+
+.demo__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.demo__file-input:focus-visible {
+  outline: var(--ctc-focus-width) solid var(--ctc-color-accent);
+  outline-offset: var(--ctc-focus-offset);
+  clip: auto;
+  width: auto;
+  height: auto;
+  margin: var(--ctc-space-1) 0 0;
+  position: static;
+}
+
+.demo__import-error-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ctc-space-2);
+}
+
+.demo__import-error {
+  margin: 0;
+  font-size: var(--ctc-font-size-ui);
+  line-height: var(--ctc-leading-snug);
+  color: var(--ctc-color-danger);
+}
+
+.demo__import-retry {
+  cursor: pointer;
+  border: var(--ctc-border-width) solid var(--ctc-color-border);
+  border-radius: var(--ctc-radius-pill);
+  padding: var(--ctc-space-2) var(--ctc-space-3);
+  min-height: 2.25rem;
+  font-size: var(--ctc-font-size-meta);
+  font-weight: var(--ctc-font-weight-semibold);
+  font-family: inherit;
+  color: var(--ctc-color-fg);
+  background: var(--ctc-color-surface);
+}
+
+.demo__import-retry:hover:not(:disabled) {
+  background: var(--ctc-color-hover);
+}
+
+.demo__import-retry:focus-visible {
+  outline: var(--ctc-focus-width) solid var(--ctc-color-accent);
+  outline-offset: var(--ctc-focus-offset);
+}
+
+.demo__import-status {
+  margin: 0;
+  font-size: var(--ctc-font-size-meta);
+  color: var(--ctc-color-muted);
+}

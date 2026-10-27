@@ -1,0 +1,108 @@
+/*
+  Shared visual foundations for capture-to-card.
+
+  Use a token when the same decision appears in more than one place,
+  or when changing it should update explorer, card, and demo together.
+
+  Keep a value local when it is a one-off composition choice
+  (thumbnail cell size, card media max-height, a single padding tweak).
+
+  --ctc-item-aspect is not a token: it is per-image, set on the component.
+*/
+
+:root {
+  color-scheme: light;
+
+  --ctc-color-bg: #f3f4f6;
+  --ctc-color-fg: #111827;
+  --ctc-color-surface: #ffffff;
+  --ctc-color-accent: #2563eb;
+  --ctc-color-on-accent: #ffffff;
+  --ctc-color-danger: #b91c1c;
+  --ctc-color-muted: color-mix(in srgb, var(--ctc-color-fg) 55%, transparent);
+  --ctc-color-border: color-mix(in srgb, var(--ctc-color-fg) 12%, transparent);
+  --ctc-color-hover: color-mix(
+    in srgb,
+    var(--ctc-color-fg) 4%,
+    var(--ctc-color-surface)
+  );
+  --ctc-color-subtle: color-mix(
+    in srgb,
+    var(--ctc-color-fg) 3%,
+    var(--ctc-color-surface)
+  );
+  --ctc-color-well: color-mix(
+    in srgb,
+    var(--ctc-color-fg) 5%,
+    var(--ctc-color-surface)
+  );
+  --ctc-color-stage: color-mix(
+    in srgb,
+    var(--ctc-color-surface) 92%,
+    var(--ctc-color-bg)
+  );
+  --ctc-color-selected: color-mix(
+    in srgb,
+    var(--ctc-color-accent) 8%,
+    var(--ctc-color-surface)
+  );
+  --ctc-color-selected-border: color-mix(
+    in srgb,
+    var(--ctc-color-accent) 35%,
+    transparent
+  );
+  --ctc-color-accent-hover: color-mix(in srgb, var(--ctc-color-accent) 88%, #000);
+  --ctc-color-accent-border: color-mix(in srgb, var(--ctc-color-accent) 80%, #000);
+  --ctc-color-meta: color-mix(
+    in srgb,
+    var(--ctc-color-muted) 85%,
+    var(--ctc-color-fg)
+  );
+
+  --ctc-space-1: 0.25rem;
+  --ctc-space-2: 0.5rem;
+  --ctc-space-3: 0.75rem;
+  --ctc-space-4: 1rem;
+  --ctc-space-5: 1.25rem;
+  --ctc-space-6: 1.5rem;
+  --ctc-space-8: 2rem;
+  --ctc-space-10: 2.5rem;
+
+  --ctc-font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ctc-font-size-label: 0.75rem;
+  --ctc-font-size-meta: 0.8125rem;
+  --ctc-font-size-ui: 0.875rem;
+  --ctc-font-size-body: 0.9375rem;
+  --ctc-font-size-card-title: 1.0625rem;
+  --ctc-font-size-title: clamp(1.35rem, 2.5vw, 1.75rem);
+  --ctc-font-weight-medium: 500;
+  --ctc-font-weight-semibold: 600;
+  --ctc-font-weight-bold: 650;
+  --ctc-leading-tight: 1.2;
+  --ctc-leading-snug: 1.35;
+  --ctc-leading-normal: 1.5;
+  --ctc-tracking-tight: -0.02em;
+  --ctc-tracking-label: 0.04em;
+
+  --ctc-radius-sm: 6px;
+  --ctc-radius-md: 12px;
+  --ctc-radius-lg: 16px;
+  --ctc-radius-pill: 999px;
+
+  --ctc-border-width: 1px;
+  --ctc-focus-width: 2px;
+  --ctc-focus-offset: 2px;
+  --ctc-disabled-opacity: 0.45;
+
+  --ctc-shadow:
+    0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  --ctc-shadow-hover:
+    0 2px 4px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.1);
+
+  --ctc-content-max: 56rem;
+  --ctc-explorer-max: 28rem;
+  --ctc-card-max: 22rem;
+  --ctc-lede-max: 46ch;
+  --ctc-thumb-size: 3.25rem;
+}

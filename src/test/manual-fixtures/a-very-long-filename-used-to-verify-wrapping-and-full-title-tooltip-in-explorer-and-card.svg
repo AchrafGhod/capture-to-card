@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" role="img" aria-label="Portrait demo fixture">
+  <rect width="800" height="1200" fill="#e8eef5"/>
+  <rect x="80" y="160" width="640" height="880" rx="16" fill="#ffffff"/>
+  <rect x="140" y="240" width="520" height="24" rx="6" fill="#c5ccd6"/>
+  <rect x="140" y="300" width="400" height="16" rx="4" fill="#d8dde5"/>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Fictional product page capture</title>
+  <desc id="desc">Demo screenshot asset for capture-to-card. Not a real website.</desc>
+  <defs>
+    <linearGradient id="hero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8eef5"/>
+      <stop offset="100%" stop-color="#d4dce8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b6fd9"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="#f6f7f9"/>
+  <rect x="0" y="0" width="1200" height="56" fill="#ffffff" stroke="#e2e5eb"/>
+  <circle cx="40" cy="28" r="10" fill="#3b6fd9"/>
+  <rect x="68" y="22" width="72" height="8" rx="4" fill="#c5ccd6"/>
+  <rect x="156" y="22" width="56" height="8" rx="4" fill="#d8dde5"/>
+  <rect x="228" y="22" width="48" height="8" rx="4" fill="#d8dde5"/>
+  <rect x="980" y="18" width="88" height="20" rx="10" fill="url(#accent)"/>
+  <rect x="0" y="56" width="1200" height="664" fill="url(#hero)"/>
+  <rect x="120" y="140" width="520" height="28" rx="6" fill="#1a2333" opacity="0.9"/>
+  <rect x="120" y="188" width="440" height="16" rx="4" fill="#4a5568" opacity="0.55"/>
+  <rect x="120" y="216" width="380" height="16" rx="4" fill="#4a5568" opacity="0.4"/>
+  <rect x="120" y="268" width="148" height="44" rx="10" fill="url(#accent)"/>
+  <rect x="284" y="268" width="120" height="44" rx="10" fill="#ffffff" stroke="#c5ccd6"/>
+  <rect x="680" y="120" width="400" height="280" rx="16" fill="#ffffff" opacity="0.85" stroke="#c5ccd6"/>
+  <rect x="720" y="160" width="320" height="12" rx="4" fill="#d8dde5"/>
+  <rect x="720" y="188" width="260" height="12" rx="4" fill="#e8ecf2"/>
+  <rect x="720" y="216" width="280" height="12" rx="4" fill="#e8ecf2"/>
+  <rect x="720" y="260" width="200" height="100" rx="8" fill="#eef2f7"/>
+  <rect x="120" y="420" width="960" height="1" fill="#c5ccd6" opacity="0.5"/>
+  <rect x="120" y="460" width="180" height="140" rx="12" fill="#ffffff" stroke="#d8dde5"/>
+  <rect x="340" y="460" width="180" height="140" rx="12" fill="#ffffff" stroke="#d8dde5"/>
+  <rect x="560" y="460" width="180" height="140" rx="12" fill="#ffffff" stroke="#d8dde5"/>
+  <rect x="780" y="460" width="180" height="140" rx="12" fill="#ffffff" stroke="#d8dde5"/>
+  <text x="120" y="680" font-family="system-ui,sans-serif" font-size="14" fill="#6b7280">demo.example.com — fictional capture</text>
+</svg>
