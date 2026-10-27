@@ -4,15 +4,9 @@ import {
   type CaptureToCardPresentation,
 } from '../components/capture-to-card/CaptureToCard'
 import type { CaptureToCardItem } from '../components/capture-to-card/captureToCardItem'
-import {
-  defaultCaptureToCardItem,
-  demoCaptureSrc,
-} from './demoDefaultItem'
+import { defaultCaptureToCardItem, demoCaptureSrc } from './demoDefaultItem'
 import { DemoImport } from './DemoImport'
-import {
-  importLocalImageFile,
-  revokeObjectUrlIfNeeded,
-} from './localImageImport'
+import { importLocalImageFile, revokeObjectUrlIfNeeded } from './localImageImport'
 import './Demo.css'
 
 export function Demo() {
@@ -22,8 +16,7 @@ export function Demo() {
   const importSequenceRef = useRef(0)
 
   const [item, setItem] = useState<CaptureToCardItem>(defaultCaptureToCardItem)
-  const [presentation, setPresentation] =
-    useState<CaptureToCardPresentation>('source')
+  const [presentation, setPresentation] = useState<CaptureToCardPresentation>('source')
   const [sourceSelected, setSourceSelected] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [importBusy, setImportBusy] = useState(false)
@@ -40,13 +33,7 @@ export function Demo() {
     }
   }, [revokeCurrentObjectUrl])
 
-  const togglePresentation = () => {
-    setPresentation((current) => (current === 'source' ? 'card' : 'source'))
-  }
-
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
@@ -90,7 +77,7 @@ export function Demo() {
         item={item}
         sourceSelected={sourceSelected}
         onSourceSelect={() => setSourceSelected(true)}
-        onPrimaryAction={togglePresentation}
+        onPresentationChange={setPresentation}
         explorerAccessory={
           <DemoImport
             fileInputId={fileInputId}

@@ -25,13 +25,13 @@ A bundled **fictional local file** (`src/assets/demo-capture.svg`) is always ava
 
 ## Current status
 
-| Area | Status |
-|------|--------|
-| Fictional explorer + card layouts (instant toggle) | **Done** |
-| Local single-image import (demo shell) | **Done** |
-| Shared-element morph (thumbnail → card media, title, meta reveal) | **Not started** |
-| Optional in-project skeleton/reveal | **Framed** (see storyboard; not implemented) |
-| npm package API | Not defined |
+| Area                                                              | Status                                       |
+| ----------------------------------------------------------------- | -------------------------------------------- |
+| Fictional explorer + card layouts (instant toggle)                | **Done**                                     |
+| Local single-image import (demo shell)                            | **Done**                                     |
+| Shared-element morph (thumbnail → card media, title, meta reveal) | **Not started**                              |
+| Optional in-project skeleton/reveal                               | **Framed** (see storyboard; not implemented) |
+| npm package API                                                   | Not defined                                  |
 
 ## Superseded scenario (2026-10-27)
 

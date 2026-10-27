@@ -43,9 +43,7 @@ describe('Demo import race', () => {
 
     render(<Demo />)
 
-    const input = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
 
     const slowFile = new File(['slow'], 'slow.png', { type: 'image/png' })
     const fastFile = new File(['fast'], 'fast.png', { type: 'image/png' })
@@ -83,15 +81,11 @@ describe('Demo import race', () => {
 
   it('discards a finishing import after the demo unmounts', async () => {
     const pending = deferred<LocalImageImportResult>()
-    vi.spyOn(localImageImport, 'importLocalImageFile').mockReturnValue(
-      pending.promise,
-    )
+    vi.spyOn(localImageImport, 'importLocalImageFile').mockReturnValue(pending.promise)
     const revokeSpy = vi.spyOn(localImageImport, 'revokeObjectUrlIfNeeded')
 
     const { unmount } = render(<Demo />)
-    const input = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
 
     fireEvent.change(input, {
       target: { files: [new File(['x'], 'late.png', { type: 'image/png' })] },

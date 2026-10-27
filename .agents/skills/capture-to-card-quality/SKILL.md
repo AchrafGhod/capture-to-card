@@ -48,6 +48,7 @@ description: >-
 After substantive changes:
 
 ```bash
+pnpm run format:check
 pnpm run lint
 pnpm run test
 pnpm run build

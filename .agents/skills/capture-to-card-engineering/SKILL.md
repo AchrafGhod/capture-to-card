@@ -22,12 +22,18 @@ description: >-
 
 State briefly:
 
-| Field | Question |
-|-------|----------|
-| **Problem** | What user-visible behavior changes? |
-| **Keep** | What must stay stable (API, composition)? |
-| **Target** | What should exist after? |
-| **Out of scope** | What to avoid? |
+| Field            | Question                                  |
+| ---------------- | ----------------------------------------- |
+| **Problem**      | What user-visible behavior changes?       |
+| **Keep**         | What must stay stable (API, composition)? |
+| **Target**       | What should exist after?                  |
+| **Out of scope** | What to avoid?                            |
+
+## Formatting
+
+- **Source of truth:** `.prettierrc.json` and `.prettierignore` in the repo root.
+- Apply with `pnpm run format`; CI enforces `pnpm run format:check` before oxlint.
+- Do not maintain parallel manual style (indent, quotes, semicolons, trailing commas) — run the formatter instead.
 
 ## Decisions and docs
 
@@ -51,3 +57,13 @@ See `.agents/skills/capture-to-card-git-pr/SKILL.md`. Owner commits only.
 ## Code from elsewhere
 
 Before copying code in, check: license, coupling to another product domain, and whether a short local rewrite is cheaper.
+
+## React memoization
+
+- Default to plain functions and values. Do **not** add `useCallback`, `useMemo`, or `memo` preemptively.
+- Before memoizing, name the **consumer** (effect deps, memoized child, imperative API) and what instability would break (spurious effect runs, wasted work, stale props).
+- **React Compiler** is not assumed on: check `vite.config.ts` / build plugins for `babel-plugin-react-compiler` (or equivalent) before relying on automatic memoization. In this repo, `@vitejs/plugin-react` runs without the compiler plugin unless that changes.
+- Prefer colocating logic in the hook or effect that needs it (e.g. item-change morph interrupt inside `useFileToCardMorph`) over exporting stable callbacks solely for parent `useEffect` deps.
+- For morph and animation handles, keep refs for DOM nodes, generation tokens, and phase when listeners or async completion must read the latest value without resubscribing every render. Update phase refs in the same helper that calls `setState`, not in a trailing `useEffect`, to avoid a post-commit lag window.
+- Forward morph: one flyout for image + title FLIP; card shell opacity at final geometry (do not scale the shell from the thumb — it fights image travel and causes width jumps). Centralize DOM restore in `finishForwardMorph`; use generation tokens for async completion only.
+- Do not trade one `useCallback` for extra refs, microtasks, or effects unless the net complexity clearly drops.

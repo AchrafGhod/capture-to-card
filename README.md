@@ -6,7 +6,7 @@ This is not a published package, not a screen-capture tool, and not a clone of a
 
 ## Status
 
-The explorer and card switch instantly so both layouts can be reviewed. Shared-element motion is planned (`docs/B-MOTION-STORYBOARD.md`) and is not in this build.
+**Create card** runs a shared-element morph (thumbnail → card media, filename → title) using the Web Animations API and FLIP. **Back to file list** uses a short cross-fade. Under `prefers-reduced-motion: reduce`, the swap is instant. Optional skeleton/reveal is not implemented yet (`docs/B-MOTION-STORYBOARD.md`).
 
 ## How the demo works
 
@@ -26,20 +26,22 @@ pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`).
+Development server: **`http://127.0.0.1:5174/`** (`vite.config.ts` sets `host`, `port: 5174`, and `strictPort: true` — if the port is busy, Vite exits instead of picking another port). Stop any other `pnpm dev` for this repo before starting.
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm dev` | Development server |
-| `pnpm test` | Vitest (jsdom) |
-| `pnpm lint` | oxlint |
-| `pnpm build` | Typecheck and production build |
-| `pnpm preview` | Serve the production build |
+| Command             | Purpose                           |
+| ------------------- | --------------------------------- |
+| `pnpm dev`          | Development server                |
+| `pnpm test`         | Vitest (jsdom)                    |
+| `pnpm lint`         | oxlint                            |
+| `pnpm format`       | Prettier — write formatting       |
+| `pnpm format:check` | Prettier — verify formatting (CI) |
+| `pnpm build`        | Typecheck and production build    |
+| `pnpm preview`      | Serve the production build        |
 
 ## Limits
 
 - One image at a time. No drag-and-drop, folders, or editor.
-- The toggle is instant. There is no travel animation yet.
+- Motion is tuned for the demo viewport; timings may change. Skeleton reveal is not included yet.
 - There is no file-size or pixel cap. A very large image can stall the tab; a limit was not added without a measured threshold.
 - Automated tests cover import rules, the disabled **Create card** path, focus after toggle, and a stale-import race. They do not prove real-browser file picking.
 - Manual fixtures for a long name, portrait, landscape, and a non-image file live in `src/test/manual-fixtures/`.

@@ -20,17 +20,14 @@ const EXTENSION_MIME: Record<string, string> = {
 export const UNSUPPORTED_IMAGE_MESSAGE =
   'That file is not a supported image. Use PNG, JPEG, GIF, WebP, or SVG.'
 
-export const DECODE_FAILED_MESSAGE =
-  'This image could not be read. Try another file.'
+export const DECODE_FAILED_MESSAGE = 'This image could not be read. Try another file.'
 
 export type LocalImageImportSuccess = {
   item: CaptureToCardItem
   objectUrl: string
 }
 
-export type LocalImageImportResult =
-  | LocalImageImportSuccess
-  | { error: string }
+export type LocalImageImportResult = LocalImageImportSuccess | { error: string }
 
 export type ImageDecodePort = {
   readDimensions: (objectUrl: string) => Promise<{ width: number; height: number }>
@@ -115,7 +112,10 @@ function imgDecode(src: string): Promise<void> {
     const img = new Image()
     img.onload = () => {
       if (typeof img.decode === 'function') {
-        img.decode().then(() => resolve()).catch(() => resolve())
+        img
+          .decode()
+          .then(() => resolve())
+          .catch(() => resolve())
       } else {
         resolve()
       }
@@ -150,13 +150,7 @@ export async function importLocalImageFile(
 
     await decodePort.decode(objectUrl)
 
-    const item = buildCaptureToCardItemFromFile(
-      file,
-      objectUrl,
-      mime,
-      width,
-      height,
-    )
+    const item = buildCaptureToCardItemFromFile(file, objectUrl, mime, width, height)
 
     return { item, objectUrl }
   } catch {

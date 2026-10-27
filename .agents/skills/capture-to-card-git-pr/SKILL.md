@@ -30,14 +30,14 @@ The project owner commits. Agents prepare the diff and a message, then wait.
 
 Message form: `type: short reason` (why, not a file list).
 
-| Type | Use |
-|------|-----|
-| `feat:` | User-visible capability |
-| `fix:` | Defect |
+| Type        | Use                              |
+| ----------- | -------------------------------- |
+| `feat:`     | User-visible capability          |
+| `fix:`      | Defect                           |
 | `refactor:` | Same behavior, clearer structure |
-| `docs:` | Documentation only |
-| `test:` | Tests only |
-| `chore:` | Tooling, CI, ignore files |
+| `docs:`     | Documentation only               |
+| `test:`     | Tests only                       |
+| `chore:`    | Tooling, CI, ignore files        |
 
 No ticket IDs. One purpose per commit.
 
@@ -59,19 +59,19 @@ Use `.github/pull_request_template.md`. Drop empty sections on trivial changes. 
 
 Labels that exist on `AchrafGhod/capture-to-card` (verified 2026-10-27):
 
-| Name | Use |
-|------|-----|
-| `enhancement` | New capability |
-| `bug` | Defect |
-| `documentation` | Docs only |
-| `accessibility` | Keyboard, focus, semantics, assistive tech |
-| `animation` | Motion or visual transition |
-| `duplicate` | Same as another issue/PR |
-| `good first issue` | Small, well-scoped issue |
-| `help wanted` | Extra attention requested |
-| `invalid` | Not actionable |
-| `question` | Needs clarification |
-| `wontfix` | Will not be done |
+| Name               | Use                                        |
+| ------------------ | ------------------------------------------ |
+| `enhancement`      | New capability                             |
+| `bug`              | Defect                                     |
+| `documentation`    | Docs only                                  |
+| `accessibility`    | Keyboard, focus, semantics, assistive tech |
+| `animation`        | Motion or visual transition                |
+| `duplicate`        | Same as another issue/PR                   |
+| `good first issue` | Small, well-scoped issue                   |
+| `help wanted`      | Extra attention requested                  |
+| `invalid`          | Not actionable                             |
+| `question`         | Needs clarification                        |
+| `wontfix`          | Will not be done                           |
 
 Do not invent labels. Do not add status labels such as “need review”; use GitHub review and CI state.
 
@@ -89,7 +89,7 @@ Team convention (not all of this is enforced by GitHub today):
 - Prefer **squash merge**.
 - Do not force-push `main`.
 - Resolve relevant review comments before merge.
-- CI on `push` and `pull_request` runs lint, test, and build (`.github/workflows/ci.yml`).
+- CI on `push` and `pull_request` runs `format:check`, lint, test, and build (`.github/workflows/ci.yml`).
 
 Observed GitHub settings (2026-10-27, empty remote, no `main` yet):
 
@@ -112,6 +112,7 @@ Do not change protections or collaborator access unless the owner asks.
 git status
 git remote -v
 gh auth status
+pnpm run format:check
 pnpm run lint
 pnpm run test
 pnpm run build

@@ -53,11 +53,7 @@
   );
   --ctc-color-accent-hover: color-mix(in srgb, var(--ctc-color-accent) 88%, #000);
   --ctc-color-accent-border: color-mix(in srgb, var(--ctc-color-accent) 80%, #000);
-  --ctc-color-meta: color-mix(
-    in srgb,
-    var(--ctc-color-muted) 85%,
-    var(--ctc-color-fg)
-  );
+  --ctc-color-meta: color-mix(in srgb, var(--ctc-color-muted) 85%, var(--ctc-color-fg));
 
   --ctc-space-1: 0.25rem;
   --ctc-space-2: 0.5rem;
@@ -95,10 +91,8 @@
   --ctc-focus-offset: 2px;
   --ctc-disabled-opacity: 0.45;
 
-  --ctc-shadow:
-    0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
-  --ctc-shadow-hover:
-    0 2px 4px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.1);
+  --ctc-shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  --ctc-shadow-hover: 0 2px 4px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.1);
 
   --ctc-content-max: 56rem;
   --ctc-explorer-max: 28rem;

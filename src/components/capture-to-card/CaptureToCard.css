@@ -38,11 +38,59 @@
 }
 
 .capture-to-card__stage {
+  position: relative;
   padding: var(--ctc-space-5);
   border: var(--ctc-border-width) solid var(--ctc-color-border);
   border-radius: var(--ctc-radius-lg);
   background: var(--ctc-color-stage);
   box-shadow: var(--ctc-shadow);
+}
+
+.capture-to-card__stage-layers {
+  display: grid;
+}
+
+.capture-to-card__stage-layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.capture-to-card__stage-layer:not([data-active]) {
+  pointer-events: none;
+}
+
+.capture-to-card[data-morphing] .capture-to-card__stage-layer {
+  pointer-events: none;
+}
+
+.ctc-morph-fly {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ctc-morph-fly__image {
+  position: fixed;
+  transform-origin: top left;
+  object-fit: contain;
+  object-position: center;
+  border-radius: var(--ctc-radius-sm);
+  pointer-events: none;
+}
+
+.ctc-morph-fly__title {
+  position: fixed;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+  line-height: var(--ctc-leading-snug);
+  overflow-wrap: anywhere;
+  color: var(--ctc-color-fg);
+  pointer-events: none;
 }
 
 .capture-to-card__source-panel {
@@ -283,7 +331,7 @@
     padding: var(--ctc-space-6) var(--ctc-space-8);
   }
 
-  .capture-to-card[data-presentation='card'] .capture-to-card__destination {
+  .capture-to-card__destination {
     display: flex;
     flex-direction: column;
     align-items: flex-start;

@@ -39,11 +39,7 @@ export function DemoImport({
       {importError ? (
         <div className="demo__import-error-block" role="alert">
           <p className="demo__import-error">{importError}</p>
-          <button
-            type="button"
-            className="demo__import-retry"
-            onClick={onRetry}
-          >
+          <button type="button" className="demo__import-retry" onClick={onRetry}>
             Choose another file
           </button>
         </div>

@@ -1,0 +1,12 @@
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+coverage
+
+# Machine-owned lockfiles and caches
+pnpm-lock.yaml
+*.tsbuildinfo
+
+# Local env overrides
+*.local

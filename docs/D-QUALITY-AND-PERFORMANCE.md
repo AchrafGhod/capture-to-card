@@ -20,16 +20,16 @@ Do not invent performance budgets. jsdom tests do not replace a browser check.
 
 ## Latest production build (2026-10-27)
 
-Node v24.15.0, pnpm 11.18.0, Vite 8.3.5, React 19.3.1. Recorded after the shared-tokens pass.
+Node v24.15.0, pnpm 11.18.0, Vite 8.3.5, React 19.3.1. Recorded after the shared-element morph pass (`feat/shared-element-morph`).
 
-| Artifact | Size |
-|----------|------|
-| `dist/` total | 248 KiB |
-| `dist/assets/index-CC6KtcOT.js` | 230.66 KiB (gzip 72.46 KiB) |
-| `dist/assets/index-CdbkLxkT.css` | 11.34 KiB (gzip 2.47 KiB) |
-| `src/assets/demo-capture.svg` | 2.57 KiB |
+| Artifact                         | Size                        |
+| -------------------------------- | --------------------------- |
+| `dist/` total                    | 256 KiB                     |
+| `dist/assets/index-2qOgwCOM.js`  | 240.16 KiB (gzip 75.22 KiB) |
+| `dist/assets/index-B3wEOm-v.css` | 11.80 KiB (gzip 2.60 KiB)   |
+| `src/assets/demo-capture.svg`    | 2.57 KiB                    |
 
-CSS grew ~3 KiB uncompressed because custom properties now live in `:root`. Gzip +0.34 KiB. JS unchanged.
+**Vs previous morph build (same day):** JS −1.41 KiB raw (−0.40 KiB gzip) after dropping shell FLIP keyframes; CSS −0.33 KiB raw. No new runtime dependencies.
 
 The JS bundle is mostly React + the demo shell, not the card CSS or SVG. There is no webfont download.
 
@@ -37,13 +37,15 @@ Earlier same-day measurements (~256 KiB then ~260 KiB) tracked explorer and impo
 
 ## Current quality bar
 
-| Area | Implemented | How it is checked |
-|------|-------------|-------------------|
-| Copy: **Create card**, hint, **Back to file list** | Yes | Tests + browser |
-| Focus moves to back button / file row on toggle | Yes | Component tests + browser |
-| Import race (stale decode) | Sequence counter in `Demo` | `Demo.importRace.test.tsx` |
-| `item` required on `CaptureToCard` | Yes | Typecheck + tests |
-| Vitest (`pnpm run test`) | Import validation, UI contracts, race | jsdom only |
+| Area                                                       | Implemented                           | How it is checked                                                                 |
+| ---------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- |
+| Copy: **Create card**, hint, **Back to file list**         | Yes                                   | Tests + browser                                                                   |
+| Focus moves to back button / file row after morph / toggle | Yes                                   | Component tests + browser                                                         |
+| Shared-element morph + reduced motion                      | WAAPI + FLIP                          | Component tests (mocked WAAPI) + browser                                          |
+| **Back to file list visual**                               | Cross-fade + layout settle            | Cross-fade is intentional; stage height jump after unmount was fixed (2026-10-27) |
+| Import race (stale decode)                                 | Sequence counter in `Demo`            | `Demo.importRace.test.tsx`                                                        |
+| `item` required on `CaptureToCard`                         | Yes                                   | Typecheck + tests                                                                 |
+| Vitest (`pnpm run test`)                                   | Import validation, UI contracts, race | jsdom only                                                                        |
 
 **Not automated:** the real file picker. Cursor’s browser cannot set files on `<input type="file">` via `DOM.setFileInputFiles`. Manual fixtures: `src/test/manual-fixtures/`.
 
@@ -84,6 +86,10 @@ pnpm run lint
 pnpm run test
 pnpm run build
 ```
+
+## Open: Back to file list
+
+A brief flash or outgoing-card geometry change is still visible on **Back to file list**. The user confirmed it persists. Destination flex alignment and WAAPI opacity cleanup remain in the branch as hygiene, not as a verified fix. Revisit before merge. Do not treat the return as done.
 
 Manual browser checks:
 
