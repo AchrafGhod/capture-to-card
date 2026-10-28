@@ -7,7 +7,7 @@ import {
   importLocalImageFile,
   revokeObjectUrlIfNeeded,
   type ImageDecodePort,
-} from './localImageImport'
+} from './demoImageImport'
 
 describe('buildCaptureToCardItemFromFile', () => {
   it('maps file fields onto the card item', () => {

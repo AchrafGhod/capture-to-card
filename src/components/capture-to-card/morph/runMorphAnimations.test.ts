@@ -1,30 +1,73 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { installMockWebAnimations } from '../../../test/mockWebAnimations'
 import {
+  buildForwardFlyout,
   cancelAnimations,
-  finishBackMorph,
   finishForwardMorph,
-  runBackMorph,
   runForwardMorph,
+  runReducedForwardMorph,
   waitForMorphSettled,
   defaultMorphTiming,
 } from './runMorphAnimations'
 
 function forwardMeasure() {
   return {
-    imageFrom: { left: 0, top: 0, width: 40, height: 40 },
+    surfaceFrom: { left: 88, top: 16, width: 204, height: 72 },
+    surfaceRadiusFrom: '8px',
+    surfaceBackgroundFrom: 'rgb(250, 250, 250)',
+    imageFrom: { left: 100, top: 28, width: 48, height: 48 },
     imageTo: { left: 10, top: 10, width: 200, height: 100 },
-    titleFrom: { left: 50, top: 10, width: 80, height: 20 },
-    titleTo: { left: 10, top: 120, width: 180, height: 24 },
-    titleFontFrom: '14px',
-    titleFontTo: '17px',
-    titleWeightFrom: '500',
-    titleWeightTo: '600',
-    titleLetterSpacingFrom: 'normal',
-    titleLetterSpacingTo: '-0.17px',
+    surfaceTo: { left: 10, top: 12, width: 360, height: 280 },
+    surfaceRadiusTo: '12px',
+    surfaceBackgroundTo: 'rgb(255, 255, 255)',
+    surfaceShadowTo: '0 1px 2px rgb(15 23 42 / 0.06)',
     imageSrc: '/x.png',
-    titleText: 'file.png',
   }
+}
+
+function mountForwardDom() {
+  document.body.innerHTML = `
+    <div id="fly"></div>
+    <div id="preview"></div>
+    <div id="dest">
+      <p class="capture-to-card__zone-label">Card</p>
+      <article id="shell">
+        <div class="capture-to-card__card-media">
+          <img id="card-image" width="100" height="50" />
+        </div>
+        <h2 id="card-title">
+          <span class="ctc-build">
+            <span class="ctc-build__dots"><span class="ctc-dot-grid"></span></span>
+            <span class="ctc-build__text">file.png</span>
+          </span>
+        </h2>
+        <dl id="details"></dl>
+      </article>
+      <div class="capture-to-card__actions capture-to-card__actions--card"></div>
+    </div>
+  `
+
+  const flyRoot = document.getElementById('fly') as HTMLDivElement
+  const flyout = buildForwardFlyout(forwardMeasure())
+  flyRoot.append(flyout.surfaceFly, flyout.imageFly)
+
+  return {
+    flyRoot,
+    ...flyout,
+    previewLayer: document.getElementById('preview')!,
+    destinationLayer: document.getElementById('dest')!,
+    cardShell: document.getElementById('shell')!,
+    cardDetails: document.getElementById('details')!,
+    cardImage: document.getElementById('card-image') as HTMLImageElement,
+    cardTitle: document.getElementById('card-title')!,
+  }
+}
+
+function animateCallsFor(element: Element) {
+  const animate = vi.mocked(Element.prototype.animate)
+  return animate.mock.calls.filter(
+    (_, index) => animate.mock.instances[index] === element,
+  )
 }
 
 describe('runMorphAnimations', () => {
@@ -37,129 +80,43 @@ describe('runMorphAnimations', () => {
 
   it('settles forward morph animations without rejecting', async () => {
     animMock = installMockWebAnimations()
-    document.body.innerHTML = `
-      <div id="fly"></div>
-      <div id="source">
-        <img id="thumb" />
-        <span id="name">file.png</span>
-      </div>
-      <article id="shell"></article>
-      <img id="card-image" width="100" height="50" />
-      <h2 id="card-title">file.png</h2>
-      <dl id="details">
-        <div></div>
-        <div></div>
-        <div></div>
-      </dl>
-    `
-
-    const imageFly = document.createElement('img')
-    const titleFly = document.createElement('h2')
-    const flyRoot = document.getElementById('fly') as HTMLDivElement
+    const dom = mountForwardDom()
 
     const animations = runForwardMorph({
       timing: defaultMorphTiming,
       measure: forwardMeasure(),
-      dom: {
-        flyRoot,
-        imageFly,
-        titleFly,
-        sourceLayer: document.getElementById('source')!,
-        cardShell: document.getElementById('shell')!,
-        cardDetails: document.getElementById('details')!,
-        cardImage: document.getElementById('card-image') as HTMLImageElement,
-        cardTitle: document.getElementById('card-title')!,
-        sourceThumb: document.getElementById('thumb')!,
-        sourceName: document.getElementById('name')!,
-      },
+      dom,
     })
 
     await expect(waitForMorphSettled(animations)).resolves.toBeUndefined()
     expect(animMock.handles.length).toBeGreaterThan(0)
-    expect(document.getElementById('thumb')!.style.visibility).toBe('hidden')
-    expect(document.getElementById('name')!.style.visibility).toBe('hidden')
+    expect(dom.cardImage.style.visibility).toBe('hidden')
   })
 
-  it('reveals the card shell with opacity only (no shell FLIP)', () => {
+  it('places the fly image at the destination box with FLIP transform', () => {
+    const fly = buildForwardFlyout(forwardMeasure())
+    expect(fly.imageFly.style.width).toBe('200px')
+    expect(fly.imageFly.style.transform).toContain('translate(')
+    expect(fly.imageFly.style.transform).toContain('scale(')
+    expect(fly.surfaceFly.style.borderRadius).toBe('8px')
+  })
+
+  it('animates the surface from the preview row to the card shell', () => {
     animMock = installMockWebAnimations()
-    document.body.innerHTML = `
-      <div id="fly"></div>
-      <div id="source"></div>
-      <article id="shell"></article>
-      <img id="card-image" />
-      <h2 id="card-title">file.png</h2>
-      <dl id="details"></dl>
-    `
+    const dom = mountForwardDom()
     runForwardMorph({
       timing: defaultMorphTiming,
       measure: forwardMeasure(),
-      dom: {
-        flyRoot: document.getElementById('fly') as HTMLDivElement,
-        imageFly: document.createElement('img'),
-        titleFly: document.createElement('h2'),
-        sourceLayer: document.getElementById('source')!,
-        cardShell: document.getElementById('shell')!,
-        cardDetails: document.getElementById('details')!,
-        cardImage: document.getElementById('card-image') as HTMLImageElement,
-        cardTitle: document.getElementById('card-title')!,
-      },
+      dom,
     })
 
-    const shellCall = vi
-      .mocked(Element.prototype.animate)
-      .mock.calls.find(
-        (call) =>
-          call[1] &&
-          (call[1] as KeyframeAnimationOptions).delay ===
-            defaultMorphTiming.cardShellDelayMs,
-      )
-    expect(shellCall).toBeTruthy()
-    const frames = shellCall![0] as Keyframe[]
-    expect(frames[0]?.opacity).toBe(0)
-    expect(frames[1]?.opacity).toBe(1)
-    expect(
-      frames.some((frame) => String(frame.transform ?? '').includes('scale')),
-    ).toBe(false)
-  })
+    const surfaceFrames = animateCallsFor(dom.surfaceFly)[0]?.[0] as Keyframe[]
+    expect(surfaceFrames[0]?.width).toBe('204px')
+    expect(surfaceFrames[0]?.height).toBe('72px')
+    expect(surfaceFrames[surfaceFrames.length - 1]?.width).toBe('360px')
 
-  it('does not scale the filename while it travels to the title', () => {
-    animMock = installMockWebAnimations()
-    document.body.innerHTML = `
-      <div id="fly"></div>
-      <div id="source"></div>
-      <article id="shell"></article>
-      <img id="card-image" />
-      <h2 id="card-title">file.png</h2>
-      <dl id="details"></dl>
-    `
-    const titleFly = document.createElement('h2')
-    runForwardMorph({
-      timing: defaultMorphTiming,
-      measure: forwardMeasure(),
-      dom: {
-        flyRoot: document.getElementById('fly') as HTMLDivElement,
-        imageFly: document.createElement('img'),
-        titleFly,
-        sourceLayer: document.getElementById('source')!,
-        cardShell: document.getElementById('shell')!,
-        cardDetails: document.getElementById('details')!,
-        cardImage: document.getElementById('card-image') as HTMLImageElement,
-        cardTitle: document.getElementById('card-title')!,
-      },
-    })
-
-    const titleCall = vi
-      .mocked(Element.prototype.animate)
-      .mock.calls.find((call) => call[0] && (call[0] as Keyframe[])[0]?.fontSize)
-    expect(titleCall).toBeTruthy()
-    const frames = titleCall![0] as Keyframe[]
-    expect(
-      frames.some((frame) => String(frame.transform ?? '').includes('scale')),
-    ).toBe(false)
-    expect(frames[0]?.left).toBe('50px')
-    expect(frames[0]?.width).toBe('80px')
-    expect(frames[0]?.fontSize).toBe('14px')
-    expect(frames[frames.length - 1]?.fontSize).toBe('17px')
+    const shellFrames = animateCallsFor(dom.cardShell)
+    expect(shellFrames).toHaveLength(0)
   })
 
   it('ignores rejections from Animation.finished after cancel()', async () => {
@@ -171,65 +128,50 @@ describe('runMorphAnimations', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('clears transform on card details when finishing forward morph', () => {
+  it('restores DOM when finishing forward morph', () => {
     animMock = installMockWebAnimations()
-    document.body.innerHTML = `
-      <div id="source"></div>
-      <article id="shell"></article>
-      <img id="card-image" />
-      <h2 id="card-title"></h2>
-      <dl id="details" style="transform: translateY(6px)">
-        <div style="opacity: 0; transform: translateY(8px)"></div>
-      </dl>
-    `
-    finishForwardMorph({
-      sourceLayer: document.getElementById('source')!,
-      cardShell: document.getElementById('shell')!,
-      cardDetails: document.getElementById('details')!,
-      cardImage: document.getElementById('card-image') as HTMLImageElement,
-      cardTitle: document.getElementById('card-title')!,
+    const dom = mountForwardDom()
+    runForwardMorph({
+      timing: defaultMorphTiming,
+      measure: forwardMeasure(),
+      dom,
     })
-    const details = document.getElementById('details')!
-    expect(details.style.transform).toBe('')
-    expect(details.style.opacity).toBe('')
-    const row = details.firstElementChild as HTMLElement
-    expect(row.style.transform).toBe('')
-    expect(row.style.opacity).toBe('')
+
+    finishForwardMorph({
+      previewLayer: dom.previewLayer,
+      destinationLayer: dom.destinationLayer,
+      cardShell: dom.cardShell,
+      cardDetails: dom.cardDetails,
+      cardImage: dom.cardImage,
+      cardTitle: dom.cardTitle,
+    })
+
+    expect(dom.cardImage.style.visibility).toBe('')
+    expect(dom.previewLayer.style.opacity).toBe('')
+    expect(dom.cardShell.classList.contains('is-revealed')).toBe(false)
+    expect(
+      dom.cardShell.querySelector('.ctc-build')?.classList.contains('is-revealed'),
+    ).toBe(true)
   })
 
-  it('keeps the destination at opacity 0 when back-morph fill:forwards is cancelled', () => {
+  it('reveals skeleton content immediately under reduced motion', () => {
     animMock = installMockWebAnimations()
-    document.body.innerHTML = `
-      <div id="source"></div>
-      <div id="dest"></div>
-    `
-    const sourceLayer = document.getElementById('source')!
-    const destinationLayer = document.getElementById('dest')!
-    const animations = runBackMorph({
-      timing: defaultMorphTiming,
-      sourceLayer,
-      destinationLayer,
-    })
-    const [destinationAnimation, sourceAnimation] = animations
-    destinationLayer.getAnimations = () => [destinationAnimation]
-    sourceLayer.getAnimations = () => [sourceAnimation]
+    const dom = mountForwardDom()
 
-    let destinationOpacityWhenCancelled = ''
-    const originalCancel = destinationAnimation.cancel.bind(destinationAnimation)
-    destinationAnimation.cancel = () => {
-      destinationOpacityWhenCancelled = destinationLayer.style.opacity
-      originalCancel()
-    }
-
-    finishBackMorph({
-      timing: defaultMorphTiming,
-      sourceLayer,
-      destinationLayer,
+    runReducedForwardMorph({
+      previewLayer: dom.previewLayer,
+      destinationLayer: dom.destinationLayer,
+      cardShell: dom.cardShell,
+      cardDetails: dom.cardDetails,
+      cardImage: dom.cardImage,
+      cardTitle: dom.cardTitle,
     })
 
-    expect(destinationOpacityWhenCancelled).toBe('0')
-    expect(destinationLayer.style.opacity).toBe('0')
-    expect(sourceLayer.style.opacity).toBe('')
+    expect(
+      dom.cardShell.querySelector('.ctc-build')?.classList.contains('is-revealed'),
+    ).toBe(true)
+    expect(dom.cardImage.style.visibility).toBe('')
+    expect(animMock.handles).toHaveLength(0)
   })
 
   it('cancels every active animation', () => {

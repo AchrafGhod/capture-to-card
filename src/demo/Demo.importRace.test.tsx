@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Demo } from './Demo'
-import * as localImageImport from './localImageImport'
+import * as demoImageImport from './demoImageImport'
 import type { CaptureToCardItem } from '../components/capture-to-card/captureToCardItem'
-import type { LocalImageImportResult } from './localImageImport'
+import type { LocalImageImportResult } from './demoImageImport'
+import { MULTIPLE_FILES_MESSAGE } from './demoImageImport'
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -35,23 +36,21 @@ describe('Demo import race', () => {
     const second = deferred<LocalImageImportResult>()
 
     const importMock = vi
-      .spyOn(localImageImport, 'importLocalImageFile')
+      .spyOn(demoImageImport, 'importLocalImageFile')
       .mockImplementationOnce(() => first.promise)
       .mockImplementationOnce(() => second.promise)
 
-    const revokeSpy = vi.spyOn(localImageImport, 'revokeObjectUrlIfNeeded')
+    const revokeSpy = vi.spyOn(demoImageImport, 'revokeObjectUrlIfNeeded')
 
     render(<Demo />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cell reveal' }))
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
 
     const slowFile = new File(['slow'], 'slow.png', { type: 'image/png' })
     const fastFile = new File(['fast'], 'fast.png', { type: 'image/png' })
 
-    expect(input).not.toBeDisabled()
-
     fireEvent.change(input, { target: { files: [slowFile] } })
-    expect(input).not.toBeDisabled()
     fireEvent.change(input, { target: { files: [fastFile] } })
 
     second.resolve({
@@ -60,7 +59,7 @@ describe('Demo import race', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'fast.png' })).toBeInTheDocument()
+      expect(screen.getByText('fast.png')).toBeInTheDocument()
     })
 
     first.resolve({
@@ -72,8 +71,8 @@ describe('Demo import race', () => {
       expect(revokeSpy).toHaveBeenCalledWith('blob:slow', expect.any(String))
     })
 
-    expect(screen.getByRole('button', { name: 'fast.png' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'slow.png' })).not.toBeInTheDocument()
+    expect(screen.getByText('fast.png')).toBeInTheDocument()
+    expect(screen.queryByText('slow.png')).not.toBeInTheDocument()
 
     importMock.mockRestore()
     revokeSpy.mockRestore()
@@ -81,10 +80,11 @@ describe('Demo import race', () => {
 
   it('discards a finishing import after the demo unmounts', async () => {
     const pending = deferred<LocalImageImportResult>()
-    vi.spyOn(localImageImport, 'importLocalImageFile').mockReturnValue(pending.promise)
-    const revokeSpy = vi.spyOn(localImageImport, 'revokeObjectUrlIfNeeded')
+    vi.spyOn(demoImageImport, 'importLocalImageFile').mockReturnValue(pending.promise)
+    const revokeSpy = vi.spyOn(demoImageImport, 'revokeObjectUrlIfNeeded')
 
     const { unmount } = render(<Demo />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cell reveal' }))
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
 
     fireEvent.change(input, {
@@ -100,6 +100,30 @@ describe('Demo import race', () => {
     await waitFor(() => {
       expect(revokeSpy).toHaveBeenCalledWith('blob:late', expect.any(String))
     })
-    expect(screen.queryByRole('button', { name: 'late.png' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'late.png', level: 2 }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('rejects multiple files at once without importing', async () => {
+    const importMock = vi.spyOn(demoImageImport, 'importLocalImageFile')
+    render(<Demo />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cell reveal' }))
+
+    const zone = document.querySelector('[data-image-drop-zone]')!
+    fireEvent.drop(zone, {
+      clientX: 10,
+      clientY: 10,
+      dataTransfer: {
+        types: ['Files'],
+        files: [
+          new File(['a'], 'a.png', { type: 'image/png' }),
+          new File(['b'], 'b.png', { type: 'image/png' }),
+        ],
+      },
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(MULTIPLE_FILES_MESSAGE)
+    expect(importMock).not.toHaveBeenCalled()
   })
 })

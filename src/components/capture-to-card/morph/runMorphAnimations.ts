@@ -1,31 +1,27 @@
 import type { ViewRect } from './containedImageRect'
+import { instantBuildReveal } from './runCellBuildReveal'
+import {
+  instantSkeletonReveal,
+  revealSkeletonContent,
+  resetSkeletonReveal,
+} from './cellBuildDom'
 
 export type MorphTiming = {
-  imageMs: number
-  titleMs: number
+  travelMs: number
   sourceFadeMs: number
-  cardShellMs: number
-  cardShellDelayMs: number
-  detailsDelayMs: number
-  detailsStaggerMs: number
-  detailsMs: number
-  backMs: number
+  travelEase: string
+  fadeEase: string
 }
 
 export const defaultMorphTiming: MorphTiming = {
-  imageMs: 560,
-  titleMs: 500,
-  sourceFadeMs: 140,
-  cardShellMs: 360,
-  cardShellDelayMs: 140,
-  detailsDelayMs: 200,
-  detailsStaggerMs: 55,
-  detailsMs: 240,
-  backMs: 200,
+  travelMs: 920,
+  sourceFadeMs: 220,
+  travelEase: 'cubic-bezier(0.33, 0, 0.12, 1)',
+  fadeEase: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
 }
 
-const easeOut = 'cubic-bezier(0.22, 1, 0.36, 1)'
-const easeInOut = 'cubic-bezier(0.4, 0, 0.2, 1)'
+const DEST_EXTRA_SELECTOR =
+  ':scope > .capture-to-card__zone-label, :scope > .capture-to-card__actions--card'
 
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false
@@ -33,28 +29,25 @@ export function prefersReducedMotion(): boolean {
 }
 
 export type ForwardMorphDomTarget = {
-  sourceLayer: HTMLElement
+  previewLayer?: HTMLElement
+  destinationLayer: HTMLElement
   cardShell: HTMLElement
-  cardDetails: HTMLElement
   cardImage: HTMLImageElement
   cardTitle: HTMLElement
-  sourceThumb?: HTMLElement
-  sourceName?: HTMLElement
+  cardDetails: HTMLElement
 }
 
 export type ForwardMorphMeasure = {
+  surfaceFrom: ViewRect
+  surfaceTo: ViewRect
+  surfaceRadiusFrom: string
+  surfaceRadiusTo: string
+  surfaceBackgroundFrom: string
+  surfaceBackgroundTo: string
+  surfaceShadowTo: string
   imageFrom: ViewRect
   imageTo: ViewRect
-  titleFrom: ViewRect
-  titleTo: ViewRect
-  titleFontFrom: string
-  titleFontTo: string
-  titleWeightFrom: string
-  titleWeightTo: string
-  titleLetterSpacingFrom: string
-  titleLetterSpacingTo: string
   imageSrc: string
-  titleText: string
 }
 
 function placeFixedRect(el: HTMLElement, rect: ViewRect) {
@@ -72,6 +65,21 @@ function flipDelta(from: ViewRect, to: ViewRect) {
   return { dx, dy, sx, sy }
 }
 
+export function computeMediaPhaseRect(
+  cardShell: HTMLElement,
+  cardMedia: HTMLElement,
+): ViewRect {
+  const shell = cardShell.getBoundingClientRect()
+  const media = cardMedia.getBoundingClientRect()
+  const padBottom = Number.parseFloat(getComputedStyle(cardShell).paddingBottom) || 0
+  return {
+    left: shell.left,
+    top: shell.top,
+    width: shell.width,
+    height: Math.max(media.bottom - shell.top + padBottom, media.height),
+  }
+}
+
 function imageTravelKeyframes(from: ViewRect, to: ViewRect) {
   const { dx, dy, sx, sy } = flipDelta(from, to)
   return [
@@ -86,34 +94,25 @@ function imageTravelKeyframes(from: ViewRect, to: ViewRect) {
   ]
 }
 
-function titleTravelKeyframes(
-  from: ViewRect,
-  to: ViewRect,
-  fontFrom: string,
-  fontTo: string,
-  weightFrom: string,
-  weightTo: string,
-  letterSpacingFrom: string,
-  letterSpacingTo: string,
-) {
+function surfaceTravelKeyframes(measure: ForwardMorphMeasure) {
   return [
     {
-      left: `${from.left}px`,
-      top: `${from.top}px`,
-      width: `${from.width}px`,
-      height: `${from.height}px`,
-      fontSize: fontFrom,
-      fontWeight: weightFrom,
-      letterSpacing: letterSpacingFrom,
+      left: `${measure.surfaceFrom.left}px`,
+      top: `${measure.surfaceFrom.top}px`,
+      width: `${measure.surfaceFrom.width}px`,
+      height: `${measure.surfaceFrom.height}px`,
+      borderRadius: measure.surfaceRadiusFrom,
+      backgroundColor: measure.surfaceBackgroundFrom,
+      boxShadow: 'none',
     },
     {
-      left: `${to.left}px`,
-      top: `${to.top}px`,
-      width: `${to.width}px`,
-      height: `${to.height}px`,
-      fontSize: fontTo,
-      fontWeight: weightTo,
-      letterSpacing: letterSpacingTo,
+      left: `${measure.surfaceTo.left}px`,
+      top: `${measure.surfaceTo.top}px`,
+      width: `${measure.surfaceTo.width}px`,
+      height: `${measure.surfaceTo.height}px`,
+      borderRadius: measure.surfaceRadiusTo,
+      backgroundColor: measure.surfaceBackgroundTo,
+      boxShadow: measure.surfaceShadowTo,
     },
   ]
 }
@@ -123,108 +122,105 @@ function safeFinished(animation: Animation): Promise<void> {
 }
 
 export function buildForwardFlyout(measure: ForwardMorphMeasure) {
+  const surfaceFly = document.createElement('div')
+  surfaceFly.className = 'ctc-morph-fly__surface'
+  placeFixedRect(surfaceFly, measure.surfaceFrom)
+  surfaceFly.style.borderRadius = measure.surfaceRadiusFrom
+  surfaceFly.style.backgroundColor = measure.surfaceBackgroundFrom
+  surfaceFly.style.boxShadow = 'none'
+
   const imageFly = document.createElement('img')
   imageFly.className = 'ctc-morph-fly__image'
   imageFly.src = measure.imageSrc
   imageFly.alt = ''
   imageFly.decoding = 'sync'
   placeFixedRect(imageFly, measure.imageTo)
+  const imageDelta = flipDelta(measure.imageFrom, measure.imageTo)
+  imageFly.style.transform = `translate(${imageDelta.dx}px, ${imageDelta.dy}px) scale(${imageDelta.sx}, ${imageDelta.sy})`
 
-  const titleFly = document.createElement('h2')
-  titleFly.className = 'ctc-morph-fly__title capture-to-card__card-title'
-  titleFly.textContent = measure.titleText
-  placeFixedRect(titleFly, measure.titleFrom)
-
-  return { imageFly, titleFly }
+  return { surfaceFly, imageFly }
 }
 
 export type RunForwardMorphParams = {
   timing: MorphTiming
   measure: ForwardMorphMeasure
-  dom: {
+  dom: ForwardMorphDomTarget & {
     flyRoot: HTMLDivElement
+    surfaceFly: HTMLElement
     imageFly: HTMLImageElement
-    titleFly: HTMLHeadingElement
-    sourceLayer: HTMLElement
-    cardShell: HTMLElement
-    cardDetails: HTMLElement
-    cardImage: HTMLImageElement
-    cardTitle: HTMLElement
-    sourceThumb?: HTMLElement
-    sourceName?: HTMLElement
+  }
+}
+
+function destinationExtras(destinationLayer: HTMLElement) {
+  return [...destinationLayer.querySelectorAll<HTMLElement>(DEST_EXTRA_SELECTOR)]
+}
+
+function cardMediaElement(cardShell: HTMLElement) {
+  return cardShell.querySelector<HTMLElement>('.capture-to-card__card-media')
+}
+
+export function prepareDomForCellBuildReveal(dom: ForwardMorphDomTarget) {
+  dom.cardImage.style.visibility = 'hidden'
+  dom.previewLayer?.style.setProperty('pointer-events', 'none')
+  resetSkeletonReveal(dom.cardShell)
+  dom.cardShell.classList.remove('is-build-complete')
+
+  dom.cardShell.style.transition = 'none'
+  dom.cardShell.style.background = 'transparent'
+  dom.cardShell.style.borderColor = 'transparent'
+  dom.cardShell.style.boxShadow = 'none'
+  dom.cardShell.style.transform = 'none'
+  const cardMedia = cardMediaElement(dom.cardShell)
+  if (cardMedia) {
+    cardMedia.style.background = 'transparent'
+    cardMedia.classList.remove('is-revealed')
   }
 }
 
 export function runForwardMorph(params: RunForwardMorphParams): Animation[] {
   const { timing, measure, dom } = params
   const animations: Animation[] = []
+  const fill = { fill: 'forwards' as const }
 
-  if (dom.sourceThumb) dom.sourceThumb.style.visibility = 'hidden'
-  if (dom.sourceName) dom.sourceName.style.visibility = 'hidden'
-  dom.cardImage.style.visibility = 'hidden'
-  dom.cardTitle.style.visibility = 'hidden'
-  const cardBody = dom.cardTitle.parentElement
-  if (cardBody instanceof HTMLElement) {
-    cardBody.style.visibility = 'hidden'
+  prepareDomForCellBuildReveal(dom)
+
+  const extras = destinationExtras(dom.destinationLayer)
+  for (const extra of extras) {
+    extra.style.opacity = '0'
   }
-  dom.cardDetails.style.opacity = '0'
-  dom.cardDetails.style.transform = ''
-  dom.cardShell.style.opacity = '0'
-  dom.sourceLayer.style.pointerEvents = 'none'
 
-  const shellAnim = dom.cardShell.animate([{ opacity: 0 }, { opacity: 1 }], {
-    duration: timing.cardShellMs,
-    delay: timing.cardShellDelayMs,
-    easing: easeOut,
-    fill: 'forwards',
-  })
-  animations.push(shellAnim)
+  const travel = {
+    duration: timing.travelMs,
+    easing: timing.travelEase,
+    ...fill,
+  }
 
-  const imageAnim = dom.imageFly.animate(
-    imageTravelKeyframes(measure.imageFrom, measure.imageTo),
-    { duration: timing.imageMs, easing: easeOut, fill: 'forwards' },
-  )
-  animations.push(imageAnim)
-
-  const titleAnim = dom.titleFly.animate(
-    titleTravelKeyframes(
-      measure.titleFrom,
-      measure.titleTo,
-      measure.titleFontFrom,
-      measure.titleFontTo,
-      measure.titleWeightFrom,
-      measure.titleWeightTo,
-      measure.titleLetterSpacingFrom,
-      measure.titleLetterSpacingTo,
+  animations.push(dom.surfaceFly.animate(surfaceTravelKeyframes(measure), travel))
+  animations.push(
+    dom.imageFly.animate(
+      imageTravelKeyframes(measure.imageFrom, measure.imageTo),
+      travel,
     ),
-    { duration: timing.titleMs, easing: easeOut, fill: 'forwards' },
   )
-  animations.push(titleAnim)
 
-  const sourceFade = dom.sourceLayer.animate([{ opacity: 1 }, { opacity: 0 }], {
-    duration: timing.sourceFadeMs,
-    easing: easeInOut,
-    fill: 'forwards',
-  })
-  animations.push(sourceFade)
-
-  const detailRows = [...dom.cardDetails.querySelectorAll<HTMLElement>(':scope > *')]
-  const detailTargets = detailRows.length > 0 ? detailRows : [dom.cardDetails]
-  for (const [index, row] of detailTargets.entries()) {
-    row.style.opacity = '0'
-    const detailsAnim = row.animate(
-      [
-        { opacity: 0, transform: 'translateY(8px)' },
-        { opacity: 1, transform: 'translateY(0)' },
-      ],
-      {
-        duration: timing.detailsMs,
-        delay: timing.detailsDelayMs + index * timing.detailsStaggerMs,
-        easing: easeOut,
-        fill: 'forwards',
-      },
+  if (dom.previewLayer) {
+    animations.push(
+      dom.previewLayer.animate([{ opacity: 1 }, { opacity: 0.25 }], {
+        duration: timing.sourceFadeMs,
+        easing: timing.fadeEase,
+        ...fill,
+      }),
     )
-    animations.push(detailsAnim)
+  }
+
+  const bodyFade = {
+    duration: timing.travelMs * 0.38,
+    delay: timing.travelMs * 0.42,
+    easing: timing.fadeEase,
+    ...fill,
+  }
+  for (const extra of extras) {
+    animations.push(extra.animate([{ opacity: 0 }, { opacity: 1 }], bodyFade))
   }
 
   return animations
@@ -239,34 +235,58 @@ function clearElementAnimationStyles(...elements: HTMLElement[]) {
   }
 }
 
-/** Idempotent: cancel WAAPI fills and drop temporary inline styles from a morph. */
-export function finishForwardMorph(dom: ForwardMorphDomTarget) {
+function resetCardChrome(cardShell: HTMLElement) {
+  cardShell.style.transition = ''
+  cardShell.style.background = ''
+  cardShell.style.borderColor = ''
+  cardShell.style.boxShadow = ''
+  cardShell.style.transform = ''
+  cardShell.style.opacity = ''
+  const cardMedia = cardMediaElement(cardShell)
+  if (cardMedia) {
+    cardMedia.style.background = ''
+    cardMedia.classList.add('is-revealed')
+  }
+}
+
+function resetDestinationExtras(destinationLayer: HTMLElement) {
+  for (const extra of destinationExtras(destinationLayer)) {
+    extra.style.opacity = ''
+  }
+}
+
+export function finishForwardMorphTravel(dom: ForwardMorphDomTarget) {
+  const previewLayer = dom.previewLayer
   clearElementAnimationStyles(
     dom.cardImage,
     dom.cardTitle,
     dom.cardDetails,
-    dom.sourceLayer,
+    ...(previewLayer ? [previewLayer] : []),
     dom.cardShell,
+    dom.destinationLayer,
   )
-  if (dom.sourceThumb) dom.sourceThumb.style.visibility = ''
-  if (dom.sourceName) dom.sourceName.style.visibility = ''
-  dom.cardImage.style.visibility = ''
-  dom.cardTitle.style.visibility = ''
-  const cardBody = dom.cardTitle.parentElement
-  if (cardBody instanceof HTMLElement) {
-    cardBody.style.visibility = ''
-  }
-  dom.cardDetails.style.opacity = ''
-  dom.cardDetails.style.transform = ''
-  for (const child of dom.cardDetails.children) {
-    if (child instanceof HTMLElement) {
-      child.style.opacity = ''
-      child.style.transform = ''
-    }
-  }
-  dom.sourceLayer.style.pointerEvents = ''
-  dom.sourceLayer.style.opacity = ''
+  resetDestinationExtras(dom.destinationLayer)
+  dom.cardShell.style.transition = ''
+  dom.cardShell.style.background = ''
+  dom.cardShell.style.borderColor = ''
+  dom.cardShell.style.boxShadow = ''
+  dom.cardShell.style.transform = ''
   dom.cardShell.style.opacity = ''
+  const cardMedia = cardMediaElement(dom.cardShell)
+  if (cardMedia) {
+    cardMedia.style.background = ''
+  }
+  if (previewLayer) {
+    previewLayer.style.pointerEvents = ''
+    previewLayer.style.opacity = ''
+  }
+}
+
+export function finishForwardMorph(dom: ForwardMorphDomTarget) {
+  finishForwardMorphTravel(dom)
+  dom.cardImage.style.visibility = ''
+  resetCardChrome(dom.cardShell)
+  revealSkeletonContent(dom.cardShell)
 }
 
 export function cancelAnimations(animations: Animation[]) {
@@ -280,44 +300,23 @@ export async function waitForMorphSettled(animations: Animation[]) {
 }
 
 export function runReducedForwardMorph(dom: ForwardMorphDomTarget) {
-  dom.sourceLayer.style.opacity = '0'
-  dom.cardShell.style.opacity = '1'
-  dom.cardDetails.style.opacity = '1'
+  const cardMedia = cardMediaElement(dom.cardShell)
+  const mediaDotField = cardMedia?.querySelector<HTMLElement>(
+    '.capture-to-card__media-dot-field',
+  )
+  if (cardMedia && mediaDotField) {
+    instantBuildReveal({
+      cardShell: dom.cardShell,
+      cardMedia,
+      cardImage: dom.cardImage,
+      mediaDotField,
+    })
+  } else {
+    instantSkeletonReveal(dom.cardShell)
+  }
   finishForwardMorph(dom)
 }
 
-export type RunBackMorphParams = {
-  timing: MorphTiming
-  sourceLayer: HTMLElement
-  destinationLayer: HTMLElement
-}
-
-export function runBackMorph(params: RunBackMorphParams): Animation[] {
-  const { timing, sourceLayer, destinationLayer } = params
-  sourceLayer.style.opacity = '0'
-  destinationLayer.style.opacity = '1'
-
-  const destFade = destinationLayer.animate([{ opacity: 1 }, { opacity: 0 }], {
-    duration: timing.backMs,
-    easing: easeInOut,
-    fill: 'forwards',
-  })
-  const sourceFade = sourceLayer.animate([{ opacity: 0 }, { opacity: 1 }], {
-    duration: timing.backMs,
-    easing: easeInOut,
-    fill: 'forwards',
-  })
-  return [destFade, sourceFade]
-}
-
-export function finishBackMorph(params: RunBackMorphParams) {
-  params.destinationLayer.style.opacity = '0'
-  params.sourceLayer.style.opacity = '1'
-  clearElementAnimationStyles(params.sourceLayer, params.destinationLayer)
-  params.sourceLayer.style.opacity = ''
-}
-
-/** Drop flyout + cancel tracked animations without restoring card DOM. */
 export function abortMorphFlyout(animations: Animation[], flyRoot: HTMLElement | null) {
   cancelAnimations(animations)
   flyRoot?.remove()

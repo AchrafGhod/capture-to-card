@@ -17,6 +17,8 @@ const EXTENSION_MIME: Record<string, string> = {
   svg: 'image/svg+xml',
 }
 
+export const MULTIPLE_FILES_MESSAGE = 'Choose one image at a time.'
+
 export const UNSUPPORTED_IMAGE_MESSAGE =
   'That file is not a supported image. Use PNG, JPEG, GIF, WebP, or SVG.'
 

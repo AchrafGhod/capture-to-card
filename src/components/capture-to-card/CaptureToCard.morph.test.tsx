@@ -1,32 +1,53 @@
-import { useState, type ComponentProps } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { useRef, useState, type ComponentProps } from 'react'
+import {
+  cloneDemoCollectionSeed,
+  createSessionCollectionItem,
+} from '../../demo/demoCollection'
+import { sampleCaptureToCardItem } from '../../test/fixtures/captureToCardFixture'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { sampleCaptureToCardItem } from '../../test/fixtures/captureToCardFixture'
 import { installMockWebAnimations } from '../../test/mockWebAnimations'
-import { CaptureToCard, type CaptureToCardPresentation } from './CaptureToCard'
+import { CaptureToCard } from './CaptureToCard'
+import type { MorphPresentation } from './morph/useFileToCardMorph'
 
-type ControlledProps = Omit<
-  ComponentProps<typeof CaptureToCard>,
-  'presentation' | 'onPresentationChange'
-> & {
-  initialPresentation?: CaptureToCardPresentation
-  onPresentationChange?: (next: CaptureToCardPresentation) => void
+type HarnessProps = Partial<ComponentProps<typeof CaptureToCard>> & {
+  initialPresentation?: MorphPresentation
 }
 
-function CaptureToCardControlled({
-  initialPresentation = 'source',
-  onPresentationChange: onPresentationChangeProp,
+function CaptureToCardMorphHarness({
+  initialPresentation = 'preview',
+  item = sampleCaptureToCardItem,
   ...props
-}: ControlledProps) {
-  const [presentation, setPresentation] = useState(initialPresentation)
+}: HarnessProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [presentation, setPresentation] =
+    useState<MorphPresentation>(initialPresentation)
+  const [collectionItems, setCollectionItems] = useState(cloneDemoCollectionSeed)
+  const [sessionLocked, setSessionLocked] = useState(false)
+
   return (
     <CaptureToCard
       {...props}
+      item={item}
       presentation={presentation}
-      onPresentationChange={(next) => {
-        onPresentationChangeProp?.(next)
-        setPresentation(next)
+      onPresentationChange={setPresentation}
+      collectionItems={collectionItems}
+      createCardSessionLocked={sessionLocked}
+      collectionInsert={{
+        createItem: () => createSessionCollectionItem(item, 'morph-test'),
+        onCommit: (insertItem) => setCollectionItems((prev) => [insertItem, ...prev]),
+        onComplete: () => setSessionLocked(true),
+        holdAfterBuildMs: 0,
+      }}
+      fileInputId="morph-file"
+      fileInputRef={fileInputRef}
+      onFileInputChange={vi.fn()}
+      onFilesDropped={vi.fn()}
+      onDemoReset={() => {
+        setSessionLocked(false)
+        setCollectionItems(cloneDemoCollectionSeed())
+        props.onDemoReset?.()
       }}
     />
   )
@@ -36,22 +57,14 @@ function stageElement() {
   return document.querySelector('.capture-to-card__stage') as HTMLElement | null
 }
 
-function expectMorphSessionClean(presentation: CaptureToCardPresentation) {
+function expectMorphSessionClean() {
   expect(document.querySelector('.ctc-morph-fly')).toBeNull()
   expect(stageElement()?.style.minHeight).toBe('')
   expect(document.querySelector('.capture-to-card')).not.toHaveAttribute(
     'data-morphing',
   )
-
-  if (presentation === 'source') {
-    expect(document.querySelector('.capture-to-card__destination')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Create card' })).not.toBeDisabled()
-  } else {
-    expect(
-      screen.getByRole('heading', { name: sampleCaptureToCardItem.title, level: 2 }),
-    ).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Back to file list' })).not.toBeDisabled()
-  }
+  expect(screen.queryByRole('button', { name: 'Create card' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
 }
 
 describe('CaptureToCard morph', () => {
@@ -87,110 +100,37 @@ describe('CaptureToCard morph', () => {
     vi.restoreAllMocks()
   })
 
-  it('requests card presentation on Create card and completes forward morph', async () => {
+  async function createCard() {
     const user = userEvent.setup()
-    const onPresentationChange = vi.fn()
-    render(
-      <CaptureToCardControlled
-        item={sampleCaptureToCardItem}
-        sourceSelected={true}
-        onPresentationChange={onPresentationChange}
-      />,
-    )
-
     await user.click(screen.getByRole('button', { name: 'Create card' }))
-    expect(onPresentationChange).toHaveBeenCalledWith('card')
+  }
+
+  it('runs forward morph and collection insert when Create card is clicked', async () => {
+    render(<CaptureToCardMorphHarness />)
+    await createCard()
 
     await waitFor(() => {
-      expectMorphSessionClean('card')
+      expectMorphSessionClean()
     })
+
+    expect(
+      screen.getAllByRole('heading', { name: sampleCaptureToCardItem.title }).length,
+    ).toBeGreaterThan(0)
   })
 
-  it('does not move focus to Back until forward morph finishes', async () => {
+  it('mounts a flyout while forward morph is in flight', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const user = userEvent.setup()
-    render(
-      <CaptureToCardControlled item={sampleCaptureToCardItem} sourceSelected={true} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
+    render(<CaptureToCardMorphHarness />)
+    await createCard()
 
     await waitFor(() => {
-      expect(animMock.handles.length).toBeGreaterThan(0)
-    })
-
-    expect(screen.getByRole('button', { name: 'Back to file list' })).not.toHaveFocus()
-
-    animMock.finishAll()
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Back to file list' })).toHaveFocus()
+      expect(document.querySelector('.ctc-morph-fly')).not.toBeNull()
     })
   })
 
-  it('requests source presentation on Back and completes back morph with focus on file row', async () => {
-    const user = userEvent.setup()
-    const onPresentationChange = vi.fn()
-    render(
-      <CaptureToCardControlled
-        item={sampleCaptureToCardItem}
-        sourceSelected={true}
-        onPresentationChange={onPresentationChange}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Back to file list' }),
-      ).not.toBeDisabled()
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Back to file list' }))
-    expect(onPresentationChange).toHaveBeenLastCalledWith('source')
-
-    await waitFor(() => {
-      expectMorphSessionClean('source')
-      expect(screen.getByRole('button', { name: 'sample.png' })).toHaveFocus()
-    })
-  })
-
-  it('does not move focus to the file row until back morph finishes', async () => {
-    animMock.restore()
-    animMock = installMockWebAnimations({ autoFinish: false })
-
-    const user = userEvent.setup()
-    render(
-      <CaptureToCardControlled item={sampleCaptureToCardItem} sourceSelected={true} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
-    animMock.finishAll()
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Back to file list' }),
-      ).not.toBeDisabled()
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Back to file list' }))
-
-    await waitFor(() => {
-      expect(animMock.handles.some((h) => h.playState === 'running')).toBe(true)
-    })
-
-    expect(screen.getByRole('button', { name: 'sample.png' })).not.toHaveFocus()
-
-    animMock.finishAll()
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'sample.png' })).toHaveFocus()
-    })
-  })
-
-  it('uses instant presentation change when reduced motion is preferred', async () => {
-    const user = userEvent.setup()
+  it('uses instant card layout when reduced motion is preferred', async () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockImplementation((query: string) => ({
@@ -201,21 +141,12 @@ describe('CaptureToCard morph', () => {
       })),
     })
 
-    const onPresentationChange = vi.fn()
-    render(
-      <CaptureToCardControlled
-        item={sampleCaptureToCardItem}
-        sourceSelected={true}
-        onPresentationChange={onPresentationChange}
-      />,
-    )
+    render(<CaptureToCardMorphHarness />)
+    await createCard()
 
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
-    expect(onPresentationChange).toHaveBeenCalledWith('card')
     expect(animMock.handles).toHaveLength(0)
-
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Back to file list' })).toHaveFocus()
+      expectMorphSessionClean()
     })
   })
 
@@ -223,26 +154,21 @@ describe('CaptureToCard morph', () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const user = userEvent.setup()
-    const { rerender } = render(
-      <CaptureToCardControlled item={sampleCaptureToCardItem} sourceSelected={true} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
+    const { rerender } = render(<CaptureToCardMorphHarness />)
+    await createCard()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
     })
 
     rerender(
-      <CaptureToCardControlled
+      <CaptureToCardMorphHarness
         item={{ ...sampleCaptureToCardItem, imageSrc: '/other.png' }}
-        sourceSelected={true}
       />,
     )
 
     await waitFor(() => {
-      expectMorphSessionClean('card')
+      expect(screen.getByRole('button', { name: 'Create card' })).toBeInTheDocument()
     })
   })
 
@@ -250,12 +176,8 @@ describe('CaptureToCard morph', () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const user = userEvent.setup()
-    render(
-      <CaptureToCardControlled item={sampleCaptureToCardItem} sourceSelected={true} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
+    render(<CaptureToCardMorphHarness />)
+    await createCard()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
@@ -264,28 +186,32 @@ describe('CaptureToCard morph', () => {
     window.dispatchEvent(new Event('resize'))
 
     await waitFor(() => {
-      expectMorphSessionClean('card')
+      expect(document.querySelector('.ctc-morph-fly')).toBeNull()
     })
   })
 
-  it('cleans up back morph on scroll interrupt', async () => {
+  it('removes flyout if the card unmounts mid-morph', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const user = userEvent.setup()
-    render(
-      <CaptureToCardControlled item={sampleCaptureToCardItem} sourceSelected={true} />,
-    )
+    const { unmount } = render(<CaptureToCardMorphHarness />)
+    await createCard()
 
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
-    animMock.finishAll()
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Back to file list' }),
-      ).not.toBeDisabled()
+      expect(document.querySelector('.ctc-morph-fly')).not.toBeNull()
     })
 
-    await user.click(screen.getByRole('button', { name: 'Back to file list' }))
+    unmount()
+
+    expect(document.querySelector('.ctc-morph-fly')).toBeNull()
+  })
+
+  it('cleans up forward morph on scroll interrupt', async () => {
+    animMock.restore()
+    animMock = installMockWebAnimations({ autoFinish: false })
+
+    render(<CaptureToCardMorphHarness />)
+    await createCard()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
@@ -294,8 +220,23 @@ describe('CaptureToCard morph', () => {
     window.dispatchEvent(new Event('scroll'))
 
     await waitFor(() => {
-      expectMorphSessionClean('source')
-      expect(screen.getByRole('button', { name: 'sample.png' })).toHaveFocus()
+      expect(document.querySelector('.ctc-morph-fly')).toBeNull()
     })
+  })
+
+  it('returns to preview on Reset demo without a new import', async () => {
+    const user = userEvent.setup()
+    render(<CaptureToCardMorphHarness onDemoReset={vi.fn()} />)
+    await createCard()
+    animMock.finishAll()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Reset demo' }))
+
+    expect(screen.getByRole('button', { name: 'Create card' })).toBeInTheDocument()
+    const build = document.querySelector('.capture-to-card__destination') as HTMLElement
+    expect(within(build).queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
   })
 })

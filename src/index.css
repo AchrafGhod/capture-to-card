@@ -16,16 +16,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100dvh;
-  background: var(--ctc-color-bg);
+  background: var(--ctc-color-surface);
   color: var(--ctc-color-fg);
-}
-
-#root {
-  min-height: 100dvh;
 }
 
 img {

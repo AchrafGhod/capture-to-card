@@ -1,73 +1,66 @@
 # Motion storyboard
 
-## Implemented today
+## Studies
 
-- **File list → card** via shared-element morph on **Create card** (WAAPI + FLIP; see `docs/C-ENGINEERING-DECISIONS.md`).
-- **Back to file list** via a short opacity cross-fade (not a full reverse morph). The cross-fade is intentional; stage height settles to the file-list size when the fade completes (no empty pinned stage).
-- Same `CaptureToCardItem` feeds both views — no duplicated field state between source and destination.
-- **Create card** is disabled until the file row is selected (with a visible hint).
-- Intro, import block, and stage keep a stable vertical position; import stays visible in card view.
-- `prefers-reduced-motion: reduce` → instant layout swap (no travel).
+- **Cell reveal** (`file-to-card`) — poses A→C (file, in-place cell build); no grid insert; demo skips forward travel.
+- **Grid insert** (`collection-insert`) — pose D (FLIP insert + neighbor shift); **Insert into collection** only.
 
-## Primary beat (hero — current choreography)
+## User flow — Cell reveal
 
-Continuity from **explorer row** to **destination card**:
+1. **Source (preview)** — file on the **left**; empty **Build** on the right; **no collection** column.
+2. **Animate** — in-place cell build (~1680ms); card remains in **Build** until reset.
+3. **Import** — preview only; never starts morph.
+4. **Reset demo** — aborts motion; keeps current source file.
 
-1. **Rest — explorer**  
-   Thumbnail + filename in the fictional list. **Create card** available when selected.
+## User flow — Grid insert
 
-2. **Commit**  
-   User activates **Create card**. Action is not blocked on animation completion.
+1. **Build** — ready card; **Collection** — three seeded tiles beside/below.
+2. **Insert into collection** — FLIP to slot 0; neighbors shift; no travel or cell build.
+3. **Reset demo** — restores seed grid + build card.
 
-3. **Travel**  
-   The same image moves and enlarges from thumbnail bounds to card media bounds (`object-fit: contain`, no crop). The card shell is already at its resting size in the DOM and fades in (opacity only) so width does not scale from the thumb cell. Filename travels in a fly layer from row bounds to title bounds (font size and weight only; no scale/stretch). Destination image and title stay hidden until arrival; metadata rows reveal after the shell appears.
+Reduced motion: instant card layout and instant grid insert — same functional end states.
 
-4. **Rest — card**  
-   Image sits in the card media slot at native aspect (contain). **Filename** is the title. **Secondary properties** (dimensions, then format · size, then last modified) reveal in document order as the shell settles.
+## Key poses (desktop)
 
-5. **Reduced motion**  
-   Under `prefers-reduced-motion: reduce`, skip travel; cross-fade or instant swap to the card layout.
+| Pose                     | Left (File)    | Build (right)                          | Collection                  | Read                          |
+| ------------------------ | -------------- | -------------------------------------- | --------------------------- | ----------------------------- |
+| **A — Source**           | Thumb + name   | Dashed “Card will build here”          | Seed cards visible          | Roles separated               |
+| **B — Departure**        | Row dims       | Static dot media + text dot grids      | Static grid                 | Image lifts from source       |
+| **C — Traverse / build** | Faded source   | Flyout travel → masked cell reveal     | Grid present                | L→R travel, then construction |
+| **D — Arrival / insert** | Source present | Completed card (hold) → FLIP to slot 0 | Neighbors make room         | Collective coordination       |
+| **E — Collection**       | File + actions | Empty build frame again                | New card first; stable grid | Insert complete               |
 
-### Mapping (source → destination)
+Mobile: vertical stack (file → build → collection); travel stays in viewport.
 
-| Explorer             | Card                                     |
-| -------------------- | ---------------------------------------- |
-| Thumbnail image      | Card media preview                       |
-| Filename (row label) | Title                                    |
-| (not shown in row)   | Dimensions, format · size, last modified |
+## Forward morph timing (not uniform)
 
-Do **not** duplicate item fields in parallel React state for animation; morph helpers read from the same item.
+| Segment                  | ~ms  | Notes                                     |
+| ------------------------ | ---- | ----------------------------------------- |
+| Travel (surface + image) | 920  | Ease-out emphasis at arrival              |
+| Source dim               | 220  | Early                                     |
+| Cell build reveal        | 1680 | Single timeline: media → title → metadata |
+| Hold before insert       | 300  | Short read after reveal completes         |
+| Collection insert FLIP   | 640  | New card from build shell                 |
+| Neighbor FLIP            | 520  | Existing tiles only                       |
 
-## Secondary beat (optional skeleton — planned, in-project)
+**Handoff:** flying image removed when travel settles; card media reveals through an SVG cell mask while matching dots drop out locally (no full-image fade under dots).
 
-**Decision (2026-10-27):** implement our own skeleton/reveal in this repo. Do not import, copy, or structurally port third-party transition-pack snippets.
+## Skeleton / reveal — fidelity
 
-When content is not yet ready to paint (e.g. after **Create card** while decode or layout is still settling):
+**Technique:** shared diagonal cell order (`revealOrder.ts`); SVG `mask` on card image and `.ctc-build__text`; static dot grids removed per cell (`runCellBuildReveal.ts`). Original media dot field during build.
 
-| Requirement             | Intent                                                                                                                                                                                |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Stable slots**        | Skeleton occupies the same regions as final card media, title, and detail rows so layout does not jump.                                                                               |
-| **Honest placeholders** | Shapes match what will appear: media block, title line, rows for dimensions, format · size, last modification.                                                                        |
-| **Reveal on readiness** | Cross-fade or swap to real content as soon as data and image are ready — **no minimum loading duration**.                                                                             |
-| **Reduced motion**      | No pulse/shimmer travel required; prefer instant swap or minimal opacity change.                                                                                                      |
-| **Accessibility**       | While skeleton is visible, real content is not exposed as interactive; use `aria-busy` / `aria-hidden` (or equivalent) so assistive tech does not treat placeholders as final values. |
+Manual comparison: `http://127.0.0.1:5174/`
 
-Skeleton remains **optional** and secondary; never block **Create card** or gate navigation on skeleton finish.
+## Checklist
 
-**Not implemented** in this pass — framing only.
+- [x] Preview → Animate (cell) / insert (grid) → collection stable → Reset demo
+- [x] Import does not auto-morph
+- [x] Cell reveal on media + title + three fields
+- [x] Manual pass on `http://127.0.0.1:5174/` (2026-10-28 — create/insert/reset)
 
-## Composition checklist (static validation)
+## Superseded
 
-- [x] Explorer feels compact on desktop and mobile; long filenames wrap.
-- [x] Card media uses item aspect ratio; images use `object-fit: contain` (no silent crop).
-- [x] Metadata hierarchy: title → property rows (dimensions, format · weight, last modification).
-- [x] Focus visible on file row, **Create card**, back button, and file input.
-- [x] Import block grouped above file list; disabled primary action shows a short hint.
-- [x] Morph: thumbnail rect → card media rect (first pass; timings provisional).
-- [ ] Skeleton/reveal (not implemented).
-
-## Superseded storyboard (2026-10-27)
-
-**Previous hero:** large source screenshot frame shrinking into a fixed 5:2 card band; title + origin URL + single meta line.
-
-**Why replaced:** align motion with **file → card** continuity (thumbnail and filename as the visible anchors), and drop URL/origin from the card story.
+- Collection tile ↔ in-scene detail (View details / Back to collection; `runDetailMorph.ts` removed 2026-10-28).
+- Stable card on build column with **View details** there (detail opens from collection only).
+- Two-beat demo without collection insert.
+- Blur cross-fade skeleton reveal + pulsing matrix during build (`revealAfterTravelMs` early fade).

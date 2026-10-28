@@ -2,52 +2,67 @@
 
 ## Intent
 
-**capture-to-card** is a small, frontend-only demonstration of **visual continuity**: an image file shown in a **fictional file explorer** (thumbnail + name) becomes an **enriched card** where the same preview, title, and file properties are composed for reading.
+**CompoMotion** (folder still `capture-to-card` until a GitHub rename) is a **personal library of motion studies**: named transitions with live, resettable demos — same ambition as [Transitions.dev](https://transitions.dev) for polish and copy-paste maturity, but original choreography and MIT-friendly source.
 
-The reusable piece is the motion and composition between explorer row and card — not a capture tool, not a full application shell, and not a real filesystem UI.
+Each study is **one product story** with its own slug, storyboard, and copy targets (CSS + React). Reusable animation code lives under `src/components/capture-to-card/`.
 
-## User journey (target)
+Not a capture tool, not a full app shell, not a public transition marketplace, and not a vendored transition pack.
 
-1. A compact surface evokes a file explorer (no OS window, no folder APIs).
-2. One image file is shown with thumbnail and filename.
-3. The user selects the file, then activates **Create card**.
-4. The thumbnail becomes the card media preview (no distortion).
-5. The filename becomes the card title.
-6. File metadata appears on the card: dimensions, format and size, **last modification** (`File.lastModified` — not “creation date”).
+## Studies (product names)
 
-A bundled **fictional local file** (`src/assets/demo-capture.svg`) is always available. The demo may also import **one** real local image via an accessible file input (in-browser only).
+| Study           | Slug                | Story                                                                           | Code focus                                          |
+| --------------- | ------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **Cell reveal** | `file-to-card`      | File preview → **Animate** → in-place cell-mask reveal; card stays in **Build** | `runCellBuildReveal.ts` (demo skips forward flyout) |
+| **Grid insert** | `collection-insert` | Ready card in **Build** → **Insert into collection** → FLIP slot 0              | `runCollectionInsertMorph.ts`                       |
+
+**Cell reveal** and **Grid insert** are separate catalog entries — one CTA each, no chained “do everything” button.
+
+## User journey — Cell reveal
+
+1. **Source** — bundled example or import: **File** column, empty **Build** frame (no collection).
+2. Drag one image onto the row or **Change image**; import never starts the morph.
+3. **Animate** — in-place cell build (~1680ms); no preview travel in this study; card stays in Build; session locks until reset.
+4. **Reset demo** — same source file; no re-import.
+
+## User journey — Grid insert
+
+1. **Build** shows a ready card; **Collection** shows seeded tiles (same card DA).
+2. **Insert into collection** — FLIP insert at front; neighbors shift. No forward travel or cell build in this study.
+3. **Reset demo** restores seed grid and the build card.
 
 ## Demo constraints
 
-- Runs entirely in the browser; no backend, accounts, or network upload.
-- Does not capture pages or the OS screen.
-- No drag-and-drop, multi-import, folder browser, or editor in the current scope.
+- Browser-only; no backend or upload.
+- Desktop: file column + build (+ collection when the study needs it); narrow viewports stack vertically.
+- Catalog shell: **Library** (tile grid) and **Docs** (Introduction + Documentation). Static page state (no router). A study opens from a library tile. **Back** returns to Library.
+- Study chrome lists **Preview**, **CSS**, and **React**. Only Preview is available.
+
+## Copy / prompt bar (roadmap)
+
+Per study, target three export surfaces (not built yet):
+
+1. **Prompt** — short product description for LLM or design handoff.
+2. **CSS** — tokens + motion-related classes only (`tokens.css`, `cell-build.css`, card composition).
+3. **React** — minimal integration: item type, hook entry, DOM refs contract.
+
+Quality bar: senior-level separation (one owner per file), no hidden globals, interrupt-safe WAAPI, reduced-motion parity.
 
 ## Current status
 
-| Area                                                              | Status                                       |
-| ----------------------------------------------------------------- | -------------------------------------------- |
-| Fictional explorer + card layouts (instant toggle)                | **Done**                                     |
-| Local single-image import (demo shell)                            | **Done**                                     |
-| Shared-element morph (thumbnail → card media, title, meta reveal) | **Not started**                              |
-| Optional in-project skeleton/reveal                               | **Framed** (see storyboard; not implemented) |
-| npm package API                                                   | Not defined                                  |
-
-## Superseded scenario (2026-10-27)
-
-**Previous:** large “source capture” frame (~16:10) with URL/origin metadata, toggling to a fixed wide band card with `object-fit: cover`.
-
-**Why replaced:** product intent shifted to **local image file → card**, emphasizing continuity from explorer thumbnail and filename rather than a webpage screenshot metaphor. Origin/URL was removed as irrelevant for local files; card media ratio follows the asset instead of a fixed aspect band.
+| Area                                          | Status                                    |
+| --------------------------------------------- | ----------------------------------------- |
+| Catalog — **Cell reveal** + **Grid insert**   | **Done**                                  |
+| Catalog shell — **Library** + **Docs**        | **Done**                                  |
+| Grid insert — button-only FLIP                | **Done**                                  |
+| Copy prompt / CSS / React tabs                | Chrome only (disabled)                    |
+| GitHub rename `capture-to-card` → CompoMotion | Proposal — folder still `capture-to-card` |
 
 ## Out of scope
 
-- Dashboards, modals, or multi-step product workflows beyond this demo.
-- Copying business logic or private assets from other codebases.
+- Search, filters, accounts, or a public marketplace.
+- Dynamic study registry or plugin architecture for two demos.
+- Redistributing third-party transition packs.
 
-## Card composition (this project)
+## Card composition
 
-Visual rules are defined and implemented locally in `CaptureToCard.css`:
-
-- Bordered card surface, restrained spacing, clear title → metadata hierarchy.
-- Media uses **contain** and per-image aspect ratio — no silent crop of important image areas.
-- Demo UI copy in simple English: short labels, action-oriented buttons, no promotional filler or implementation jargon in the interface.
+Rules in `CaptureToCard.css`: bordered card, contained media, title → metadata hierarchy, per-image `--ctc-item-aspect`. Collection grid reuses the same card markup as Build.

@@ -1,6 +1,6 @@
 # Agent instructions
 
-Personal project **capture-to-card** — explorer-to-card composition (frontend only). Hero morph is implemented (WAAPI + FLIP); skeleton reveal is not.
+Personal project **CompoMotion** (repo folder `capture-to-card`) — file→card→collection→detail motion study (WAAPI + FLIP, matrix/skeleton reveal).
 
 ## Must
 

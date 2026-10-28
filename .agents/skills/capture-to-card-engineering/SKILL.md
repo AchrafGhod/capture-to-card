@@ -9,14 +9,14 @@ description: >-
 
 ## Principles
 
-- Smallest structure that solves the explorer-to-card demo and a future reusable component.
-- **Import** stays outside `CaptureToCard` (`demo/localImageImport`, `DemoImport`); the component consumes a ready `CaptureToCardItem` (`captureToCardItem.ts`).
+- Smallest structure that solves the drop/choose-to-card demo and a future reusable component.
+- **Import pipeline** stays in `demo/demoImageImport.ts`; `CaptureToCard` shows a compact file preview and consumes `CaptureToCardItem` plus parent-owned `presentation` (`preview` | `card`). Morph starts only on **Animate** (in-place cell study) or **Create card** (forward + build).
 - Demo defaults live in `demo/demoDefaultItem.ts`, not under `components/`.
 - One clear owner per concern (layout vs motion vs demo shell).
 - No backend, global state library, monorepo, or plugin architecture unless the user explicitly expands scope.
 - Reuse plain CSS and documented browser APIs before adding animation libraries.
 - Do not install **both** Motion and GSAP.
-- Skeleton/reveal is **in-project only** — no third-party transition-pack imports (see `docs/C-ENGINEERING-DECISIONS.md`).
+- Skeleton/reveal CSS lives in `cell-build.css` (original to this repo); see `THIRD_PARTY_NOTICES.md`.
 
 ## Before non-trivial work
 
@@ -65,5 +65,5 @@ Before copying code in, check: license, coupling to another product domain, and 
 - **React Compiler** is not assumed on: check `vite.config.ts` / build plugins for `babel-plugin-react-compiler` (or equivalent) before relying on automatic memoization. In this repo, `@vitejs/plugin-react` runs without the compiler plugin unless that changes.
 - Prefer colocating logic in the hook or effect that needs it (e.g. item-change morph interrupt inside `useFileToCardMorph`) over exporting stable callbacks solely for parent `useEffect` deps.
 - For morph and animation handles, keep refs for DOM nodes, generation tokens, and phase when listeners or async completion must read the latest value without resubscribing every render. Update phase refs in the same helper that calls `setState`, not in a trailing `useEffect`, to avoid a post-commit lag window.
-- Forward morph: one flyout for image + title FLIP; card shell opacity at final geometry (do not scale the shell from the thumb — it fights image travel and causes width jumps). Centralize DOM restore in `finishForwardMorph`; use generation tokens for async completion only.
+- Forward morph: one flyout with three siblings — empty surface (drop panel → card box via width/height, not scale), image FLIP from **preview rect** to **painted card media**, title box/font travel (no scale). Drop anchor is ephemeral (not stored on the item). Do not FLIP the real card shell. Property skeleton/reveal is the same WAAPI pass. Centralize DOM restore in `finishForwardMorph`; use generation tokens for async completion only.
 - Do not trade one `useCallback` for extra refs, microtasks, or effects unless the net complexity clearly drops.

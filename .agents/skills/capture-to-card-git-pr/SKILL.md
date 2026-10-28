@@ -55,6 +55,8 @@ Do not mix unrelated work onto the branch.
 
 Open PRs against `main`. The body describes the **final** change, not the attempt history.
 
+**Title:** plain English headline for humans (what the user gets), not a conventional commit subject — no `feat:` / `fix:` prefix on the PR title. Keep `type: reason` for commits only.
+
 Use `.github/pull_request_template.md`. Drop empty sections on trivial changes. Do not check boxes you did not verify.
 
 Labels that exist on `AchrafGhod/capture-to-card` (verified 2026-10-27):
