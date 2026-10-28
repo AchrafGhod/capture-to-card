@@ -25,8 +25,6 @@ export type CaptureToCardProps = {
   collectionInsert?: CollectionInsertConfig
   onCellBuildComplete?: () => void
   showCollection?: boolean
-  showFileColumn?: boolean
-  cellRevealInPlace?: boolean
   studyScene?: MorphStudyScene
   sceneAriaLabel?: string
   onDemoReset?: () => void
@@ -76,8 +74,6 @@ export function CaptureToCard({
   collectionInsert,
   onCellBuildComplete,
   showCollection = true,
-  showFileColumn = true,
-  cellRevealInPlace = false,
   studyScene = 'file-to-card',
   sceneAriaLabel = 'Interactive motion study scene',
   onDemoReset,
@@ -90,6 +86,8 @@ export function CaptureToCard({
   onImportRetry,
   importStatusMessage = null,
 }: CaptureToCardProps) {
+  const isCellRevealStudy = studyScene === 'file-to-card'
+
   const {
     morphRefs,
     morphPhase,
@@ -97,7 +95,6 @@ export function CaptureToCard({
     showDestinationLayer,
     showEmptyBuildSlot,
     showCardSurface,
-    previewLayerInert,
     destinationLayerInert,
     collectionLayerInert,
     requestForwardMorph,
@@ -112,14 +109,11 @@ export function CaptureToCard({
     studyScene,
     collectionInsert,
     onCellBuildComplete,
-    inPlaceCellReveal: cellRevealInPlace,
   })
 
   const {
     stageRef,
-    previewLayerRef,
     previewRowRef,
-    previewThumbRef,
     destinationLayerRef,
     collectionGridRef,
     cardShellRef,
@@ -132,7 +126,7 @@ export function CaptureToCard({
   const mediaDotsRef = useRef<HTMLDivElement>(null)
 
   const cardItem = item
-  const useMatrixBuildSlots = studyScene === 'file-to-card'
+  const useMatrixBuildSlots = isCellRevealStudy
 
   useLayoutEffect(() => {
     if (!useMatrixBuildSlots) return
@@ -158,12 +152,9 @@ export function CaptureToCard({
     }
   }, [cardItem.width, cardItem.height, cardItem.imageSrc, useMatrixBuildSlots])
 
-  const useInPlaceCellReveal = studyScene === 'file-to-card' && cellRevealInPlace
-  const showSplitFileColumn = showFileColumn && !useInPlaceCellReveal
-
   const dropZone = useImageDropZone(
     previewRowRef,
-    showSplitFileColumn || useInPlaceCellReveal ? onFilesDropped : () => {},
+    isCellRevealStudy ? onFilesDropped : () => {},
   )
 
   const aspectStyle = {
@@ -176,15 +167,8 @@ export function CaptureToCard({
       ? 'Reading your image…'
       : importStatusMessage
 
-  const showCreateCard =
-    showSplitFileColumn &&
-    studyScene === 'file-to-card' &&
-    presentation === 'preview' &&
-    !isMorphing &&
-    !importBusy &&
-    !createCardSessionLocked
   const showAnimate =
-    useInPlaceCellReveal &&
+    isCellRevealStudy &&
     presentation === 'preview' &&
     !isMorphing &&
     !importBusy &&
@@ -212,133 +196,11 @@ export function CaptureToCard({
       data-morphing={isMorphing || undefined}
       data-presentation={presentation}
       data-study-scene={studyScene}
-      data-cell-reveal-layout={useInPlaceCellReveal ? 'in-place' : undefined}
       data-morph-phase={morphPhase !== 'idle' ? morphPhase : undefined}
       style={aspectStyle}
     >
       <div ref={stageRef} className="capture-to-card__stage">
         <div className="capture-to-card__stage-stack">
-          {showSplitFileColumn || (!showFileColumn && !useInPlaceCellReveal) ? (
-            <div
-              ref={previewLayerRef}
-              className={[
-                'capture-to-card__preview-layer',
-                !showSplitFileColumn ? 'capture-to-card__sr-only' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              aria-hidden={!showSplitFileColumn ? true : previewLayerInert}
-              inert={!showSplitFileColumn ? true : previewLayerInert}
-            >
-              {showSplitFileColumn ? (
-                <>
-                  <p className="capture-to-card__zone-label">File</p>
-
-                  <div
-                    ref={previewRowRef}
-                    className="capture-to-card__file-preview"
-                    data-image-drop-zone=""
-                    data-drag-over={dropZone.dragOver || undefined}
-                    data-busy={importBusy || undefined}
-                    onDragEnter={dropZone.onDragEnter}
-                    onDragLeave={dropZone.onDragLeave}
-                    onDragOver={dropZone.onDragOver}
-                    onDrop={dropZone.onDrop}
-                  >
-                    <div className="capture-to-card__file-preview-thumb-wrap">
-                      <img
-                        ref={previewThumbRef}
-                        className="capture-to-card__file-preview-thumb"
-                        src={item.imageSrc}
-                        alt=""
-                        width={item.width}
-                        height={item.height}
-                        decoding="async"
-                      />
-                    </div>
-                    <p
-                      className="capture-to-card__file-preview-name"
-                      title={item.title}
-                    >
-                      {item.title}
-                    </p>
-                    <label
-                      className="capture-to-card__file-preview-change"
-                      htmlFor={fileInputId}
-                    >
-                      Change image
-                    </label>
-                    <input
-                      ref={fileInputRef}
-                      id={fileInputId}
-                      className="capture-to-card__file-input"
-                      type="file"
-                      accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,.png,.jpg,.jpeg,.gif,.webp,.svg"
-                      onChange={onFileInputChange}
-                      disabled={importBusy || isMorphing}
-                    />
-                  </div>
-
-                  {liveStatus ? (
-                    <p className="capture-to-card__import-status" role="status">
-                      {liveStatus}
-                    </p>
-                  ) : null}
-                  {importError ? (
-                    <div className="capture-to-card__import-error-block" role="alert">
-                      <p className="capture-to-card__import-error">{importError}</p>
-                      {onImportRetry ? (
-                        <button
-                          type="button"
-                          className="capture-to-card__import-retry"
-                          onClick={onImportRetry}
-                        >
-                          Try again
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="capture-to-card__actions capture-to-card__actions--preview">
-                    {showCreateCard ? (
-                      <button
-                        type="button"
-                        className="capture-to-card__primary-button"
-                        onClick={requestForwardMorph}
-                      >
-                        Create card
-                      </button>
-                    ) : null}
-                    {showResetDemo && showSplitFileColumn ? (
-                      <button
-                        type="button"
-                        className="capture-to-card__secondary-button"
-                        onClick={handleResetDemo}
-                      >
-                        Reset demo
-                      </button>
-                    ) : null}
-                  </div>
-                </>
-              ) : (
-                <div
-                  ref={previewRowRef}
-                  className="capture-to-card__preview-layer-anchor"
-                >
-                  <img
-                    ref={previewThumbRef}
-                    className="capture-to-card__file-preview-thumb"
-                    src={item.imageSrc}
-                    alt=""
-                    width={item.width}
-                    height={item.height}
-                    decoding="async"
-                  />
-                </div>
-              )}
-            </div>
-          ) : null}
-
           <div className="capture-to-card__right-column">
             {showDestinationLayer ? (
               <div
@@ -350,7 +212,7 @@ export function CaptureToCard({
                 <p
                   className={[
                     'capture-to-card__zone-label',
-                    useInPlaceCellReveal ? 'capture-to-card__sr-only' : '',
+                    isCellRevealStudy ? 'capture-to-card__sr-only' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -358,31 +220,23 @@ export function CaptureToCard({
                   Build
                 </p>
 
-                {!useInPlaceCellReveal && !showFileColumn && liveStatus ? (
-                  <p className="capture-to-card__import-status" role="status">
-                    {liveStatus}
-                  </p>
-                ) : null}
-
                 <div
-                  ref={useInPlaceCellReveal ? previewRowRef : undefined}
+                  ref={isCellRevealStudy ? previewRowRef : undefined}
                   className={[
                     'capture-to-card__build-frame',
-                    useInPlaceCellReveal
-                      ? 'capture-to-card__build-frame--in-place'
-                      : '',
+                    isCellRevealStudy ? 'capture-to-card__build-frame--in-place' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
-                  data-image-drop-zone={useInPlaceCellReveal ? '' : undefined}
+                  data-image-drop-zone={isCellRevealStudy ? '' : undefined}
                   data-drag-over={
-                    useInPlaceCellReveal && dropZone.dragOver ? true : undefined
+                    isCellRevealStudy && dropZone.dragOver ? true : undefined
                   }
-                  data-busy={useInPlaceCellReveal && importBusy ? true : undefined}
-                  onDragEnter={useInPlaceCellReveal ? dropZone.onDragEnter : undefined}
-                  onDragLeave={useInPlaceCellReveal ? dropZone.onDragLeave : undefined}
-                  onDragOver={useInPlaceCellReveal ? dropZone.onDragOver : undefined}
-                  onDrop={useInPlaceCellReveal ? dropZone.onDrop : undefined}
+                  data-busy={isCellRevealStudy && importBusy ? true : undefined}
+                  onDragEnter={isCellRevealStudy ? dropZone.onDragEnter : undefined}
+                  onDragLeave={isCellRevealStudy ? dropZone.onDragLeave : undefined}
+                  onDragOver={isCellRevealStudy ? dropZone.onDragOver : undefined}
+                  onDrop={isCellRevealStudy ? dropZone.onDrop : undefined}
                 >
                   {showEmptyBuildSlot ? (
                     <div className="capture-to-card__build-empty" aria-hidden="true">
@@ -500,7 +354,7 @@ export function CaptureToCard({
                   </article>
                 </div>
 
-                {useInPlaceCellReveal ? (
+                {isCellRevealStudy ? (
                   <>
                     {liveStatus ? (
                       <p className="capture-to-card__import-status" role="status">
@@ -539,7 +393,7 @@ export function CaptureToCard({
                   </>
                 ) : null}
 
-                {showAnimate || (useInPlaceCellReveal && showResetDemo) ? (
+                {showAnimate || (isCellRevealStudy && showResetDemo) ? (
                   <div className="capture-to-card__actions capture-to-card__actions--in-place">
                     {showAnimate ? (
                       <button
@@ -550,7 +404,7 @@ export function CaptureToCard({
                         Animate
                       </button>
                     ) : null}
-                    {useInPlaceCellReveal && showResetDemo ? (
+                    {isCellRevealStudy && showResetDemo ? (
                       <button
                         type="button"
                         className="capture-to-card__secondary-button"
@@ -562,8 +416,7 @@ export function CaptureToCard({
                   </div>
                 ) : null}
 
-                {showInsertIntoCollection ||
-                (!showFileColumn && !useInPlaceCellReveal && showResetDemo) ? (
+                {showInsertIntoCollection || (!isCellRevealStudy && showResetDemo) ? (
                   <div className="capture-to-card__actions capture-to-card__actions--card">
                     {showInsertIntoCollection ? (
                       <button
@@ -574,7 +427,7 @@ export function CaptureToCard({
                         Insert into collection
                       </button>
                     ) : null}
-                    {!showFileColumn && !useInPlaceCellReveal && showResetDemo ? (
+                    {!isCellRevealStudy && showResetDemo ? (
                       <button
                         type="button"
                         className="capture-to-card__secondary-button"

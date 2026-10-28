@@ -19,20 +19,20 @@ Verified against official release channels at project init (Oct 2026).
 
 ## Scene model (current — 2026-10-28)
 
-| Concern                          | Owner                     | Notes                                                                                                                               |
-| -------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Shared item type                 | `captureToCardItem.ts`    | `CaptureToCardItem` only; no demo defaults.                                                                                         |
-| Preview + build + collection UI  | `CaptureToCard.tsx` + CSS | File column + build frame + optional collection grid (`showCollection`). Parent owns `presentation`, collection list, session lock. |
-| Study catalog + docs shell       | `demo/demoPages.ts`       | **Cell reveal** + **Grid insert** catalog; Library / Docs copy and page helpers.                                                    |
-| Collection seed + session ids    | `demo/demoCollection.ts`  | Stable seed ids; `session-*` ids for cards created in the demo run.                                                                 |
-| Local file import (single image) | `demo/demoImageImport.ts` | Used by `Demo` only. User-facing import errors; creates and revokes `blob:` URLs with reference set from source + collection.       |
-| Import ordering                  | `demo/Demo.tsx`           | Monotonic `importSequenceRef`; failed import keeps previous file.                                                                   |
-| Demo orchestration               | `demo/Demo.tsx`           | Header (Library / Docs), catalog tiles, study well, collection owner, object URL lifecycle.                                         |
-| Bundled example                  | `demo/demoDefaultItem.ts` | `defaultCaptureToCardItem` for first paint; `demoCaptureSrc` for revoke comparisons.                                                |
+| Concern                          | Owner                     | Notes                                                                                                                         |
+| -------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Shared item type                 | `captureToCardItem.ts`    | `CaptureToCardItem` only; no demo defaults.                                                                                   |
+| Preview + build + collection UI  | `CaptureToCard.tsx` + CSS | In-place build (cell reveal) or ready card + grid (grid insert). Parent owns `presentation`, collection list, session lock.   |
+| Study catalog + docs shell       | `demo/demoPages.ts`       | **Cell reveal** + **Grid insert** catalog; Library / Docs copy and page helpers.                                              |
+| Collection seed + session ids    | `demo/demoCollection.ts`  | Stable seed ids; `session-*` ids for cards created in the demo run.                                                           |
+| Local file import (single image) | `demo/demoImageImport.ts` | Used by `Demo` only. User-facing import errors; creates and revokes `blob:` URLs with reference set from source + collection. |
+| Import ordering                  | `demo/Demo.tsx`           | Monotonic `importSequenceRef`; failed import keeps previous file.                                                             |
+| Demo orchestration               | `demo/Demo.tsx`           | Header (Library / Docs), catalog tiles, study well, collection owner, object URL lifecycle.                                   |
+| Bundled example                  | `demo/demoDefaultItem.ts` | `defaultCaptureToCardItem` for first paint; `demoCaptureSrc` for revoke comparisons.                                          |
 
-**Studies:** **Cell reveal** — in-place cell build only (`cellRevealInPlace`; demo **Animate**; no file→build travel). **Grid insert** — `requestCollectionInsertOnly`, no forward morph.
+**Studies:** **Cell reveal** (`studyScene: file-to-card`) — in-place cell build on **Animate** only. **Grid insert** (`studyScene: collection-insert`) — `requestCollectionInsertOnly`, no cell build.
 
-**Forward flyout (component default):** `runMorphAnimations.ts` still implements preview-row travel + cell build for tests and non–in-place integration; the live cell study does not use it.
+**Removed (2026-10-28):** legacy File column + **Create card** + preview-row forward flyout (`buildForwardFlyout` / `runForwardMorph`). Props `showFileColumn` and `cellRevealInPlace` removed; study scene selects behavior.
 
 **Presentation:** parent-owned `preview` | `card` only (2026-10-28 — removed in-scene collection detail / tile FLIP).
 
@@ -66,7 +66,7 @@ Product name in the UI is **CompoMotion**. Layout and states stay in `CaptureToC
 
 - Bordered surfaces, modest radius, light shadow on the destination card.
 - Title and definition-list metadata below media; restrained type scale.
-- File preview row (thumb + name + change control); card in a second layer when `presentation === 'card'` or during morph.
+- File preview row removed with legacy path; **Change image** on the in-place build frame (cell reveal).
 - Image ratio is `--ctc-item-aspect` on the component instance, not a token.
 
 ## Animation engine (current — 2026-10-27)
@@ -79,22 +79,18 @@ Product name in the UI is **CompoMotion**. Layout and states stay in `CaptureToC
 | `cell-build.css` + `cellBuildDom.ts` | Layered placeholders + reduced-motion instant reveal; build uses cell masks (`runCellBuildReveal.ts`). |
 | `mountMatrixDots.ts`                 | Static dot grids aligned to mask cells during build.                                                   |
 | `revealOrder.ts`                     | Diagonal reveal order (deterministic jitter).                                                          |
-| `runCollectionInsertMorph.ts`        | Build shell → grid slot FLIP + neighbor FLIP after forward hold.                                       |
-| `runMorphAnimations.ts`              | Forward WAAPI (~920ms travel), surface + image flyout.                                                 |
-| `useFileToCardMorph.ts`              | Forward → hold → insert phases; prebuild card for measure; interruption cleanup.                       |
+| `runCollectionInsertMorph.ts`        | Build shell → grid slot FLIP + neighbor FLIP.                                                          |
+| `runMorphAnimations.ts`              | Cell-build DOM prep/restore + reduced-motion instant reveal (no travel flyout).                        |
+| `useFileToCardMorph.ts`              | Cell build + collection insert phases; interruption cleanup.                                           |
 | `CaptureToCard.tsx`                  | Preview layer + card destination; `.ctc-build` wrappers for text reveal.                               |
 
-**Forward (default component / tests):** measure file preview row and thumb → card shell and contained media. Flyout: surface panel + image FLIP only. When travel settles, flyout is removed and **cell build reveal** runs (~1680ms, one timeline for media + text).
+**Cell reveal:** **Animate** runs `prepareDomForCellBuildReveal` then `runCellBuildReveal` in the build frame.
 
-**In-place cell study:** `cellRevealInPlace` skips flyout; build runs in the build frame after **Animate**. Preview layer stays interactive until morph starts; `finishForwardMorphTravel` still restores chrome before reveal.
+**Reduced motion:** skip WAAPI travel (none); instant cell build or collection insert swap.
 
-**Do not** FLIP the real card shell (inner media would scale). **Do not** parent the image under the surface fly.
+**Superseded (2026-10-28):** preview-row forward flyout + File column + **Create card** — removed; only the two live studies remain.
 
-**Reduced motion:** skip flyout; instant card layout.
-
-**Superseded (same day):** explorer row → card forward morph and **Back to file list** fade/back height animation — removed with the fictional explorer.
-
-**Do not** install Motion and GSAP together. **Do not** build a generic multi-field animation engine — hero is image travel + simple secondary reveal.
+**Do not** install Motion and GSAP together. **Do not** build a generic multi-field animation engine — hero is cell-mask build + collection FLIP.
 
 ## Skeleton / reveal (current — 2026-10-28)
 

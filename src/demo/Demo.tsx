@@ -293,8 +293,6 @@ export function Demo() {
                     isCellReveal ? handleCellBuildComplete : undefined
                   }
                   showCollection={!isCellReveal}
-                  showFileColumn={false}
-                  cellRevealInPlace={isCellReveal}
                   sceneAriaLabel={`${activeStudy.title} — ${studySlug} interactive scene`}
                   onDemoReset={handleDemoReset}
                   importBusy={importBusy}

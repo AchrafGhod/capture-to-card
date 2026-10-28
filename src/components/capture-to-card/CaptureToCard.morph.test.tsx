@@ -4,7 +4,7 @@ import {
   createSessionCollectionItem,
 } from '../../demo/demoCollection'
 import { sampleCaptureToCardItem } from '../../test/fixtures/captureToCardFixture'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installMockWebAnimations } from '../../test/mockWebAnimations'
@@ -15,7 +15,7 @@ type HarnessProps = Partial<ComponentProps<typeof CaptureToCard>> & {
   initialPresentation?: MorphPresentation
 }
 
-function CaptureToCardMorphHarness({
+function CellRevealHarness({
   initialPresentation = 'preview',
   item = sampleCaptureToCardItem,
   ...props
@@ -29,17 +29,14 @@ function CaptureToCardMorphHarness({
   return (
     <CaptureToCard
       {...props}
+      studyScene="file-to-card"
+      showCollection={false}
       item={item}
       presentation={presentation}
       onPresentationChange={setPresentation}
       collectionItems={collectionItems}
       createCardSessionLocked={sessionLocked}
-      collectionInsert={{
-        createItem: () => createSessionCollectionItem(item, 'morph-test'),
-        onCommit: (insertItem) => setCollectionItems((prev) => [insertItem, ...prev]),
-        onComplete: () => setSessionLocked(true),
-        holdAfterBuildMs: 0,
-      }}
+      onCellBuildComplete={() => setSessionLocked(true)}
       fileInputId="morph-file"
       fileInputRef={fileInputRef}
       onFileInputChange={vi.fn()}
@@ -53,17 +50,51 @@ function CaptureToCardMorphHarness({
   )
 }
 
+function GridInsertHarness(props: Partial<ComponentProps<typeof CaptureToCard>> = {}) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [presentation, setPresentation] = useState<MorphPresentation>('card')
+  const [collectionItems, setCollectionItems] = useState(cloneDemoCollectionSeed)
+  const [sessionLocked, setSessionLocked] = useState(false)
+
+  return (
+    <CaptureToCard
+      {...props}
+      studyScene="collection-insert"
+      item={sampleCaptureToCardItem}
+      presentation={presentation}
+      onPresentationChange={setPresentation}
+      collectionItems={collectionItems}
+      createCardSessionLocked={sessionLocked}
+      collectionInsert={{
+        createItem: () =>
+          createSessionCollectionItem(sampleCaptureToCardItem, 'morph-test'),
+        onCommit: (insertItem) => setCollectionItems((prev) => [insertItem, ...prev]),
+        onComplete: () => setSessionLocked(true),
+        holdAfterBuildMs: 0,
+      }}
+      fileInputId="morph-file"
+      fileInputRef={fileInputRef}
+      onFileInputChange={vi.fn()}
+      onFilesDropped={vi.fn()}
+      onDemoReset={() => {
+        setSessionLocked(false)
+        setCollectionItems(cloneDemoCollectionSeed())
+      }}
+    />
+  )
+}
+
 function stageElement() {
   return document.querySelector('.capture-to-card__stage') as HTMLElement | null
 }
 
-function expectMorphSessionClean() {
+function expectCellSessionClean() {
   expect(document.querySelector('.ctc-morph-fly')).toBeNull()
   expect(stageElement()?.style.minHeight).toBe('')
   expect(document.querySelector('.capture-to-card')).not.toHaveAttribute(
     'data-morphing',
   )
-  expect(screen.queryByRole('button', { name: 'Create card' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Animate' })).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
 }
 
@@ -100,34 +131,22 @@ describe('CaptureToCard morph', () => {
     vi.restoreAllMocks()
   })
 
-  async function createCard() {
+  async function animateCell() {
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
+    await user.click(screen.getByRole('button', { name: 'Animate' }))
   }
 
-  it('runs forward morph and collection insert when Create card is clicked', async () => {
-    render(<CaptureToCardMorphHarness />)
-    await createCard()
+  it('runs in-place cell build when Animate is clicked', async () => {
+    render(<CellRevealHarness />)
+    await animateCell()
 
     await waitFor(() => {
-      expectMorphSessionClean()
+      expectCellSessionClean()
     })
 
     expect(
       screen.getAllByRole('heading', { name: sampleCaptureToCardItem.title }).length,
     ).toBeGreaterThan(0)
-  })
-
-  it('mounts a flyout while forward morph is in flight', async () => {
-    animMock.restore()
-    animMock = installMockWebAnimations({ autoFinish: false })
-
-    render(<CaptureToCardMorphHarness />)
-    await createCard()
-
-    await waitFor(() => {
-      expect(document.querySelector('.ctc-morph-fly')).not.toBeNull()
-    })
   })
 
   it('uses instant card layout when reduced motion is preferred', async () => {
@@ -141,43 +160,43 @@ describe('CaptureToCard morph', () => {
       })),
     })
 
-    render(<CaptureToCardMorphHarness />)
-    await createCard()
+    render(<CellRevealHarness />)
+    await animateCell()
 
     expect(animMock.handles).toHaveLength(0)
     await waitFor(() => {
-      expectMorphSessionClean()
+      expectCellSessionClean()
     })
   })
 
-  it('interrupts an in-flight forward morph when the image changes', async () => {
+  it('interrupts an in-flight cell build when the image changes', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const { rerender } = render(<CaptureToCardMorphHarness />)
-    await createCard()
+    const { rerender } = render(<CellRevealHarness />)
+    await animateCell()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
     })
 
     rerender(
-      <CaptureToCardMorphHarness
+      <CellRevealHarness
         item={{ ...sampleCaptureToCardItem, imageSrc: '/other.png' }}
       />,
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Create card' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Animate' })).toBeInTheDocument()
     })
   })
 
-  it('cleans up forward morph on resize interrupt', async () => {
+  it('cleans up cell build on resize interrupt', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    render(<CaptureToCardMorphHarness />)
-    await createCard()
+    render(<CellRevealHarness />)
+    await animateCell()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
@@ -186,32 +205,34 @@ describe('CaptureToCard morph', () => {
     window.dispatchEvent(new Event('resize'))
 
     await waitFor(() => {
-      expect(document.querySelector('.ctc-morph-fly')).toBeNull()
+      expect(document.querySelector('.capture-to-card')).not.toHaveAttribute(
+        'data-morphing',
+      )
     })
   })
 
-  it('removes flyout if the card unmounts mid-morph', async () => {
+  it('cleans up animations if the card unmounts mid-build', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    const { unmount } = render(<CaptureToCardMorphHarness />)
-    await createCard()
+    const { unmount } = render(<CellRevealHarness />)
+    await animateCell()
 
     await waitFor(() => {
-      expect(document.querySelector('.ctc-morph-fly')).not.toBeNull()
+      expect(animMock.handles.length).toBeGreaterThan(0)
     })
 
     unmount()
 
-    expect(document.querySelector('.ctc-morph-fly')).toBeNull()
+    expect(stageElement()).toBeNull()
   })
 
-  it('cleans up forward morph on scroll interrupt', async () => {
+  it('cleans up cell build on scroll interrupt', async () => {
     animMock.restore()
     animMock = installMockWebAnimations({ autoFinish: false })
 
-    render(<CaptureToCardMorphHarness />)
-    await createCard()
+    render(<CellRevealHarness />)
+    await animateCell()
 
     await waitFor(() => {
       expect(animMock.handles.length).toBeGreaterThan(0)
@@ -220,14 +241,16 @@ describe('CaptureToCard morph', () => {
     window.dispatchEvent(new Event('scroll'))
 
     await waitFor(() => {
-      expect(document.querySelector('.ctc-morph-fly')).toBeNull()
+      expect(document.querySelector('.capture-to-card')).not.toHaveAttribute(
+        'data-morphing',
+      )
     })
   })
 
   it('returns to preview on Reset demo without a new import', async () => {
     const user = userEvent.setup()
-    render(<CaptureToCardMorphHarness onDemoReset={vi.fn()} />)
-    await createCard()
+    render(<CellRevealHarness onDemoReset={vi.fn()} />)
+    await animateCell()
     animMock.finishAll()
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
@@ -235,8 +258,21 @@ describe('CaptureToCard morph', () => {
 
     await user.click(screen.getByRole('button', { name: 'Reset demo' }))
 
-    expect(screen.getByRole('button', { name: 'Create card' })).toBeInTheDocument()
-    const build = document.querySelector('.capture-to-card__destination') as HTMLElement
-    expect(within(build).queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Animate' })).toBeInTheDocument()
+  })
+
+  it('inserts into the collection on Grid insert study', async () => {
+    const user = userEvent.setup()
+    render(<GridInsertHarness />)
+
+    await user.click(screen.getByRole('button', { name: 'Insert into collection' }))
+    animMock.finishAll()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
+    })
+    expect(
+      screen.getAllByRole('heading', { name: sampleCaptureToCardItem.title }).length,
+    ).toBeGreaterThan(1)
   })
 })

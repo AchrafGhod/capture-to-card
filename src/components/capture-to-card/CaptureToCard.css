@@ -41,14 +41,14 @@
   }
 }
 
-.capture-to-card[data-cell-reveal-layout='in-place'] .capture-to-card__stage-stack {
+.capture-to-card[data-study-scene='file-to-card'] .capture-to-card__stage-stack {
   grid-template-columns: 1fr;
   justify-items: center;
   max-width: 22rem;
   margin-inline: auto;
 }
 
-.capture-to-card[data-cell-reveal-layout='in-place'] .capture-to-card__right-column {
+.capture-to-card[data-study-scene='file-to-card'] .capture-to-card__right-column {
   width: 100%;
 }
 
@@ -83,7 +83,7 @@
   text-align: center;
 }
 
-.capture-to-card[data-cell-reveal-layout='in-place'] .capture-to-card__in-place-change {
+.capture-to-card[data-study-scene='file-to-card'] .capture-to-card__in-place-change {
   width: 100%;
 }
 
@@ -105,7 +105,7 @@
   transition: none;
 }
 
-/* Travel: hide destination image until flyout handoff / cell reveal (inline style overrides). */
+/* Hide destination image until cell reveal (inline style overrides). */
 .capture-to-card[data-morph-phase='to-card'] .capture-to-card__card-image {
   visibility: hidden;
 }
@@ -127,111 +127,8 @@
   min-width: 0;
 }
 
-/* Forward morph flyout (component default / tests). */
-.capture-to-card__preview-layer-anchor {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.capture-to-card__actions--preview {
-  flex-wrap: wrap;
-  gap: var(--ctc-space-2);
-  justify-content: flex-start;
-}
-
-.capture-to-card[data-morphing] .capture-to-card__preview-layer,
 .capture-to-card[data-morphing] .capture-to-card__destination {
   pointer-events: none;
-}
-
-.ctc-morph-fly {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.ctc-morph-fly__surface {
-  position: fixed;
-  z-index: 1;
-  box-sizing: border-box;
-  border: var(--ctc-border-width) solid transparent;
-  background: var(--ctc-color-surface);
-  pointer-events: none;
-  transform-origin: center bottom;
-}
-
-.ctc-morph-fly__image {
-  position: fixed;
-  z-index: 2;
-  transform-origin: top left;
-  object-fit: contain;
-  object-position: center;
-  border-radius: var(--ctc-radius-sm);
-  pointer-events: none;
-}
-
-.capture-to-card__preview-layer {
-  min-width: 0;
-}
-
-.capture-to-card__file-preview {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  gap: var(--ctc-space-2) var(--ctc-space-3);
-  align-items: center;
-  padding: var(--ctc-space-3);
-  border-radius: var(--ctc-radius-sm);
-  border: var(--ctc-border-width) solid var(--ctc-color-border);
-  background: var(--ctc-color-surface);
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease;
-}
-
-.capture-to-card__file-preview[data-drag-over] {
-  border-color: var(--ctc-color-accent);
-  background: color-mix(in srgb, var(--ctc-color-accent) 6%, var(--ctc-color-surface));
-}
-
-.capture-to-card__file-preview[data-busy] {
-  opacity: 0.85;
-}
-
-.capture-to-card__file-preview-thumb-wrap {
-  grid-row: 1 / span 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: var(--ctc-radius-sm);
-  background: var(--ctc-color-well);
-  overflow: hidden;
-}
-
-.capture-to-card__file-preview-thumb {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-.capture-to-card__file-preview-name {
-  margin: 0;
-  font-size: var(--ctc-font-size-meta);
-  font-weight: var(--ctc-font-weight-semibold);
-  line-height: var(--ctc-leading-snug);
-  overflow-wrap: anywhere;
 }
 
 .capture-to-card__file-preview-change {

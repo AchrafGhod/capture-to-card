@@ -10,10 +10,10 @@ Not a capture tool, not a full app shell, not a public transition marketplace, a
 
 ## Studies (product names)
 
-| Study           | Slug                | Story                                                                           | Code focus                                          |
-| --------------- | ------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **Cell reveal** | `file-to-card`      | File preview → **Animate** → in-place cell-mask reveal; card stays in **Build** | `runCellBuildReveal.ts` (demo skips forward flyout) |
-| **Grid insert** | `collection-insert` | Ready card in **Build** → **Insert into collection** → FLIP slot 0              | `runCollectionInsertMorph.ts`                       |
+| Study           | Slug                | Story                                                                           | Code focus                    |
+| --------------- | ------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
+| **Cell reveal** | `file-to-card`      | Drop or **Change image** → **Animate** → in-place cell-mask reveal in **Build** | `runCellBuildReveal.ts`       |
+| **Grid insert** | `collection-insert` | Ready card in **Build** → **Insert into collection** → FLIP slot 0              | `runCollectionInsertMorph.ts` |
 
 **Cell reveal** and **Grid insert** are separate catalog entries — one CTA each, no chained “do everything” button.
 

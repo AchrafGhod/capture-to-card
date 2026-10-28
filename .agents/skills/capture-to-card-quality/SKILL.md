@@ -9,7 +9,7 @@ description: >-
 
 ## Motion (primary)
 
-- Hero behavior: **Cell reveal** demo — **Animate** runs in-place cell-mask build (`runCellBuildReveal.ts`). Default component mode (tests) still exercises preview-row forward travel + build via **Create card** (`runMorphAnimations.ts`).
+- Hero behavior: **Cell reveal** — **Animate** runs in-place cell-mask build (`runCellBuildReveal.ts`). **Grid insert** — FLIP only (`runCollectionInsertMorph.ts`).
 - Import updates preview only; never block import on animation or skeleton finish.
 - Under `prefers-reduced-motion: reduce`, prefer instant layout swap or short opacity cross-fade — no travel.
 - Storyboard: `docs/B-MOTION-STORYBOARD.md`.
@@ -29,7 +29,7 @@ description: >-
 
 ## Interface copy (demo)
 
-- Simple English in the UI; **Change image**, **Animate** (cell study) or **Create card** (default component), **Insert into collection**, **Reset demo** (not implementation jargon).
+- Simple English in the UI; **Change image**, **Animate** (cell reveal), **Insert into collection** (grid insert), **Reset demo** (not implementation jargon).
 - No implementation status, morph notes, or promotional filler in the interface.
 - Metadata labels stay exact: **Last modified** is `File.lastModified`, not creation date.
 - Keep user-facing strings separate from engineering docs.

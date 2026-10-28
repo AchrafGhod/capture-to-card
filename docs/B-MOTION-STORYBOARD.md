@@ -2,7 +2,7 @@
 
 ## Studies
 
-- **Cell reveal** (`file-to-card`) — poses A→C (file, in-place cell build); no grid insert; demo skips forward travel.
+- **Cell reveal** (`file-to-card`) — poses A→C (in-place cell build on the build frame); no grid insert.
 - **Grid insert** (`collection-insert`) — pose D (FLIP insert + neighbor shift); **Insert into collection** only.
 
 ## User flow — Cell reveal

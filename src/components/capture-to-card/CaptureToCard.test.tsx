@@ -1,18 +1,8 @@
 import { useRef, useState, type ComponentProps } from 'react'
 import { Demo } from '../../demo/Demo'
-import {
-  cloneDemoCollectionSeed,
-  createSessionCollectionItem,
-} from '../../demo/demoCollection'
+import { cloneDemoCollectionSeed } from '../../demo/demoCollection'
 import * as demoImageImport from '../../demo/demoImageImport'
-import {
-  createEvent,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installMockWebAnimations } from '../../test/mockWebAnimations'
@@ -36,18 +26,14 @@ function CaptureToCardHarness(
   return (
     <CaptureToCard
       {...props}
+      studyScene={props.studyScene ?? 'file-to-card'}
+      showCollection={props.showCollection ?? false}
       item={props.item ?? sampleCaptureToCardItem}
       presentation={presentation}
       onPresentationChange={setPresentation}
       collectionItems={collectionItems}
       createCardSessionLocked={sessionLocked}
-      collectionInsert={{
-        createItem: () =>
-          createSessionCollectionItem(props.item ?? sampleCaptureToCardItem, 'unit'),
-        onCommit: (insertItem) => setCollectionItems((prev) => [insertItem, ...prev]),
-        onComplete: () => setSessionLocked(true),
-        holdAfterBuildMs: 0,
-      }}
+      onCellBuildComplete={() => setSessionLocked(true)}
       fileInputId="test-file"
       fileInputRef={fileInputRef}
       onFileInputChange={props.onFileInputChange ?? vi.fn()}
@@ -82,19 +68,14 @@ describe('CaptureToCard', () => {
     animMock.restore()
   })
 
-  it('shows the file preview before the card is created', () => {
+  it('shows Animate before the cell build runs', () => {
     render(<CaptureToCardHarness />)
 
-    const preview = document.querySelector(
-      '.capture-to-card__preview-layer',
-    ) as HTMLElement
-    expect(within(preview).getByText(sampleCaptureToCardItem.title)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create card' })).toBeInTheDocument()
-    const build = document.querySelector('.capture-to-card__destination') as HTMLElement
-    expect(within(build).queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Animate' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Change image')).toBeInTheDocument()
   })
 
-  it('forwards a single dropped file', () => {
+  it('forwards a single dropped file on the cell reveal study', () => {
     const onFilesDropped = vi.fn()
     render(<CaptureToCardHarness onFilesDropped={onFilesDropped} />)
 
@@ -146,17 +127,14 @@ describe('CaptureToCard', () => {
     expect(onImportRetry).toHaveBeenCalled()
   })
 
-  it('adds the card to the collection after Create card is activated', async () => {
+  it('locks the session after Animate completes the cell build', async () => {
     const user = userEvent.setup()
     render(<CaptureToCardHarness />)
 
-    await user.click(screen.getByRole('button', { name: 'Create card' }))
+    await user.click(screen.getByRole('button', { name: 'Animate' }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reset demo' })).toBeInTheDocument()
     })
-    expect(
-      screen.getAllByRole('heading', { name: sampleCaptureToCardItem.title }).length,
-    ).toBeGreaterThan(0)
   })
 })

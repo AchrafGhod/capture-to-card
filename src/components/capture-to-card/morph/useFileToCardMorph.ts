@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { flushSync } from 'react-dom'
 import type { CaptureToCardItem } from '../captureToCardItem'
-import { getContainedImageRect } from './containedImageRect'
 import {
   defaultCollectionInsertTiming,
   finishCollectionInsertMorph,
@@ -16,16 +15,12 @@ import {
 } from './runCellBuildReveal'
 import {
   abortMorphFlyout,
-  buildForwardFlyout,
   prepareDomForCellBuildReveal,
   finishForwardMorph,
   finishForwardMorphTravel,
   prefersReducedMotion,
-  runForwardMorph,
   runReducedForwardMorph,
-  waitForMorphSettled,
-  type ForwardMorphMeasure,
-  defaultMorphTiming,
+  type ForwardMorphDomTarget,
 } from './runMorphAnimations'
 import { applyInPlacePreviewReady, resetSkeletonReveal } from './cellBuildDom'
 
@@ -37,9 +32,7 @@ export type CollectionInsertPayload = CaptureToCardItem & { id: string }
 
 export type MorphDomRefs = {
   stageRef: RefObject<HTMLDivElement | null>
-  previewLayerRef: RefObject<HTMLDivElement | null>
   previewRowRef: RefObject<HTMLDivElement | null>
-  previewThumbRef: RefObject<HTMLImageElement | null>
   destinationLayerRef: RefObject<HTMLDivElement | null>
   collectionGridRef: RefObject<HTMLDivElement | null>
   cardShellRef: RefObject<HTMLElement | null>
@@ -66,10 +59,8 @@ export type UseFileToCardMorphOptions = {
   createCardSessionLocked: boolean
   studyScene?: MorphStudyScene
   collectionInsert?: CollectionInsertConfig
-  /** When forward build finishes and no collection insert is configured. */
+  /** When cell build finishes and no collection insert is configured. */
   onCellBuildComplete?: () => void
-  /** Cell reveal study: single card + in-place build (no file→build travel). */
-  inPlaceCellReveal?: boolean
 }
 
 function viewRectFromElement(el: Element) {
@@ -92,13 +83,12 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     studyScene = 'file-to-card',
     collectionInsert,
     onCellBuildComplete,
-    inPlaceCellReveal = false,
   } = options
 
+  const isCellRevealStudy = studyScene === 'file-to-card'
+
   const stageRef = useRef<HTMLDivElement>(null)
-  const previewLayerRef = useRef<HTMLDivElement>(null)
   const previewRowRef = useRef<HTMLDivElement>(null)
-  const previewThumbRef = useRef<HTMLImageElement>(null)
   const destinationLayerRef = useRef<HTMLDivElement>(null)
   const collectionGridRef = useRef<HTMLDivElement>(null)
   const cardShellRef = useRef<HTMLElement>(null)
@@ -137,9 +127,7 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
 
   const morphRefs: MorphDomRefs = {
     stageRef,
-    previewLayerRef,
     previewRowRef,
-    previewThumbRef,
     destinationLayerRef,
     collectionGridRef,
     cardShellRef,
@@ -149,24 +137,19 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     cardDetailsRef,
   }
 
-  function forwardDomTarget(requirePreviewLayer = true) {
+  function forwardDomTarget(): ForwardMorphDomTarget | null {
     const cardImage = cardImageRef.current
     const cardTitle = cardTitleRef.current
     const cardDetails = cardDetailsRef.current
-    const previewLayer = previewLayerRef.current
     const destinationLayer = destinationLayerRef.current
     const cardShell = cardShellRef.current
     if (!cardImage || !cardTitle || !cardDetails || !destinationLayer || !cardShell) {
-      return null
-    }
-    if (requirePreviewLayer && !previewLayer) {
       return null
     }
     return {
       cardImage,
       cardTitle,
       cardDetails,
-      previewLayer: previewLayer ?? undefined,
       destinationLayer,
       cardShell,
     }
@@ -205,13 +188,6 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     const height = stage.getBoundingClientRect().height
     stageMinHeightRef.current = height
     stage.style.minHeight = `${height}px`
-  }
-
-  function expandStageHeightToDestination() {
-    const stage = stageRef.current
-    if (!stage || stageMinHeightRef.current === null) return
-    const destHeight = stage.getBoundingClientRect().height
-    stage.style.minHeight = `${Math.max(stageMinHeightRef.current, destHeight)}px`
   }
 
   function bumpMorphGeneration() {
@@ -256,7 +232,7 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
   }
 
   function syncInPlacePreviewReady() {
-    if (!inPlaceCellReveal) return
+    if (!isCellRevealStudy) return
     if (presentation !== 'preview' || morphPhaseRef.current !== 'idle') return
     const cardShell = cardShellRef.current
     const cardMedia = cardMediaRef.current
@@ -266,11 +242,11 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
   }
 
   function runCellBuildPass(generation: number) {
-    const dom = forwardDomTarget(inPlaceCellReveal ? false : true)
+    const dom = forwardDomTarget()
     if (!dom) {
       abortMorph(true)
       setMorphPhase('idle')
-      onPresentationChange(inPlaceCellReveal ? 'preview' : 'preview')
+      onPresentationChange('preview')
       return
     }
 
@@ -321,7 +297,7 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     cancelFlyoutOnly()
     collectionInsertStartedRef.current = false
     if (restoreDom) {
-      const dom = forwardDomTarget(false)
+      const dom = forwardDomTarget()
       if (dom) {
         finishForwardMorph(dom)
       }
@@ -464,30 +440,6 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     insertConfig.onComplete?.()
   }
 
-  function measureForwardSource(): ForwardMorphMeasure | null {
-    const row = previewRowRef.current
-    const thumb = previewThumbRef.current
-    const cardShell = cardShellRef.current
-    const cardImage = cardImageRef.current
-    if (!row || !thumb || !cardShell || !cardImage) return null
-
-    const rowStyle = getComputedStyle(row)
-    const cardStyle = getComputedStyle(cardShell)
-
-    return {
-      surfaceFrom: viewRectFromElement(row),
-      surfaceRadiusFrom: rowStyle.borderRadius,
-      surfaceBackgroundFrom: rowStyle.backgroundColor,
-      imageFrom: getContainedImageRect(thumb),
-      imageTo: getContainedImageRect(cardImage),
-      surfaceTo: viewRectFromElement(cardShell),
-      surfaceRadiusTo: cardStyle.borderRadius,
-      surfaceBackgroundTo: cardStyle.backgroundColor,
-      surfaceShadowTo: cardStyle.boxShadow,
-      imageSrc,
-    }
-  }
-
   function requestCollectionInsertOnly() {
     if (createCardSessionLocked) return
     if (!collectionInsertRef.current) return
@@ -515,7 +467,7 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
   }
 
   function requestForwardMorph() {
-    if (studyScene === 'collection-insert') return
+    if (studyScene !== 'file-to-card') return
     if (createCardSessionLocked) return
     if (morphPhaseRef.current !== 'idle') {
       abortMorph(true)
@@ -524,7 +476,7 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
 
     if (prefersReducedMotion()) {
       onPresentationChange('card')
-      const reducedDom = forwardDomTarget(inPlaceCellReveal ? false : true)
+      const reducedDom = forwardDomTarget()
       if (reducedDom) runReducedForwardMorph(reducedDom)
       if (collectionInsertRef.current) {
         commitInstantCollectionInsert()
@@ -534,38 +486,17 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
       return
     }
 
-    if (inPlaceCellReveal) {
-      const dom = forwardDomTarget(false)
-      if (!dom) return
-      pinStageHeight()
-      flushSync(() => {
-        setMorphPhase('to-card')
-        onPresentationChange('card')
-      })
-      prepareDomForCellBuildReveal(dom)
-      finishForwardMorphTravel(dom)
-      const generation = bumpMorphGeneration()
-      runCellBuildPass(generation)
-      return
-    }
-
-    const previewLayer = previewLayerRef.current
-    const stage = stageRef.current
-    if (!previewLayer || !stage) return
-
-    const previewReady =
-      previewRowRef.current && previewThumbRef.current && previewLayerRef.current
-    if (!previewReady) return
-
+    const dom = forwardDomTarget()
+    if (!dom) return
     pinStageHeight()
     flushSync(() => {
       setMorphPhase('to-card')
       onPresentationChange('card')
     })
-    const cardImage = cardImageRef.current
-    if (cardImage) {
-      cardImage.style.visibility = 'hidden'
-    }
+    prepareDomForCellBuildReveal(dom)
+    finishForwardMorphTravel(dom)
+    const generation = bumpMorphGeneration()
+    runCellBuildPass(generation)
   }
 
   function requestResetDemo() {
@@ -594,65 +525,15 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
 
   useLayoutEffect(() => {
     if (presentation !== 'card') return
-
-    if (prefersReducedMotion() && morphPhase === 'idle') {
-      const reducedDom = forwardDomTarget(inPlaceCellReveal ? false : true)
-      if (reducedDom) runReducedForwardMorph(reducedDom)
-      return
-    }
-    if (inPlaceCellReveal) return
-    if (morphPhase !== 'to-card') return
-
-    const sourceMeasure = measureForwardSource()
-    const stage = stageRef.current
-    const dom = forwardDomTarget(true)
-
-    if (!sourceMeasure || !stage || !dom) {
-      abortMorph(true)
-      setMorphPhase('idle')
-      onPresentationChange('preview')
-      return
-    }
-
-    expandStageHeightToDestination()
-
-    const generation = bumpMorphGeneration()
-    cancelFlyoutOnly()
-
-    const flyRoot = document.createElement('div')
-    flyRoot.className = 'ctc-morph-fly'
-    flyRoot.setAttribute('aria-hidden', 'true')
-    const { surfaceFly, imageFly } = buildForwardFlyout(sourceMeasure)
-    flyRoot.append(surfaceFly, imageFly)
-    stage.appendChild(flyRoot)
-    flyRootRef.current = flyRoot
-
-    const animations = runForwardMorph({
-      timing: defaultMorphTiming,
-      measure: sourceMeasure,
-      dom: {
-        flyRoot,
-        surfaceFly,
-        imageFly,
-        ...dom,
-      },
-    })
-    activeAnimations.current = animations
-
-    void waitForMorphSettled(animations).then(() => {
-      if (morphGeneration.current !== generation) return
-      finishForwardMorphTravel(dom)
-      flyRoot.remove()
-      flyRootRef.current = null
-      activeAnimations.current = []
-
-      runCellBuildPass(generation)
-    })
-  }, [morphPhase, presentation, onPresentationChange, inPlaceCellReveal])
+    if (!prefersReducedMotion() || morphPhase !== 'idle') return
+    if (studyScene !== 'file-to-card') return
+    const reducedDom = forwardDomTarget()
+    if (reducedDom) runReducedForwardMorph(reducedDom)
+  }, [morphPhase, presentation, studyScene])
 
   useLayoutEffect(() => {
     syncInPlacePreviewReady()
-  }, [inPlaceCellReveal, presentation, morphItemKey, imageSrc])
+  }, [isCellRevealStudy, presentation, morphItemKey, imageSrc])
 
   useEffect(() => {
     return () => {
@@ -679,15 +560,12 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
   }, [])
 
   const isMorphing = morphPhase !== 'idle'
-  const showPreviewLayer = true
   const showDestinationLayer = true
-  const previewLayerInert = isMorphing
   const destinationLayerInert = isMorphing
   const collectionLayerInert = isMorphing
-  const showEmptyBuildSlot =
-    !inPlaceCellReveal && presentation === 'preview' && morphPhase === 'idle'
+  const showEmptyBuildSlot = false
   const showCardSurface =
-    inPlaceCellReveal ||
+    isCellRevealStudy ||
     presentation === 'card' ||
     morphPhase === 'to-card' ||
     morphPhase === 'hold-build' ||
@@ -697,11 +575,9 @@ export function useFileToCardMorph(options: UseFileToCardMorphOptions) {
     morphRefs,
     morphPhase,
     isMorphing,
-    showPreviewLayer,
     showDestinationLayer,
     showEmptyBuildSlot,
     showCardSurface,
-    previewLayerInert,
     destinationLayerInert,
     collectionLayerInert,
     requestForwardMorph,

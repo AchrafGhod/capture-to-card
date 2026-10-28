@@ -20,24 +20,24 @@ Node v24.15.0, pnpm 11.18.0, Vite 8.3.5, React 19.3.1. Docs-style shell (Introdu
 
 | Artifact                         | Size                      |
 | -------------------------------- | ------------------------- |
-| `dist/` total                    | 300K                      |
-| `dist/assets/index-CMq40WEP.js`  | 264.92 kB (gzip 81.71 kB) |
-| `dist/assets/index-f7gIK0iJ.css` | 22.95 kB (gzip 4.39 kB)   |
+| `dist/` total                    | 296K                      |
+| `dist/assets/index-COrtmpKx.js`  | 258.59 kB (gzip 80.38 kB) |
+| `dist/assets/index-9oZEp-Gw.css` | 21.00 kB (gzip 4.12 kB)   |
 | Bundled PNG fixtures             | ~25 kB combined           |
 
 **Delta vs prior build (same day, catalog shell):** JS +~4 kB (intro/docs copy), CSS −~2 kB (playbook + one-off stage sizes removed). No new npm dependencies.
 
 ## Current quality bar
 
-| Area                                                    | Implemented              | Checked              |
-| ------------------------------------------------------- | ------------------------ | -------------------- |
-| File + build + collection stage                         | Yes                      | Browser @ 5174       |
-| Catalog shell — **Library**, **Docs**, study preview    | Yes                      | Browser @ 5174       |
-| **Animate** / **Create card** → insert / **Reset demo** | Yes                      | Tests + browser      |
-| Forward morph + collection FLIP                         | WAAPI                    | Mock tests + browser |
-| Cell-mask build reveal                                  | Media + title + 3 fields | Browser @ 5174       |
-| Import race / multi-file / blob retention               | Yes                      | Vitest               |
-| Reduced motion                                          | Instant swap             | Manual               |
+| Area                                                      | Implemented              | Checked              |
+| --------------------------------------------------------- | ------------------------ | -------------------- |
+| File + build + collection stage                           | Yes                      | Browser @ 5174       |
+| Catalog shell — **Library**, **Docs**, study preview      | Yes                      | Browser @ 5174       |
+| **Animate** / **Insert into collection** / **Reset demo** | Yes                      | Tests + browser      |
+| Collection FLIP                                           | WAAPI                    | Mock tests + browser |
+| Cell-mask build reveal                                    | Media + title + 3 fields | Browser @ 5174       |
+| Import race / multi-file / blob retention                 | Yes                      | Vitest               |
+| Reduced motion                                            | Instant swap             | Manual               |
 
 ## Manual validation (browser)
 
