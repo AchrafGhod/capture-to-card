@@ -2,7 +2,7 @@
   Shared visual foundations for capture-to-card.
 
   Use a token when the same decision appears in more than one place,
-  or when changing it should update explorer, card, and demo together.
+  or when changing it should update file preview, card, and demo together.
 
   Keep a value local when it is a one-off composition choice
   (thumbnail cell size, card media max-height, a single padding tweak).
@@ -13,7 +13,7 @@
 :root {
   color-scheme: light;
 
-  --ctc-color-bg: #f3f4f6;
+  --ctc-color-bg: #fafafa;
   --ctc-color-fg: #111827;
   --ctc-color-surface: #ffffff;
   --ctc-color-accent: #2563eb;
@@ -53,11 +53,7 @@
   );
   --ctc-color-accent-hover: color-mix(in srgb, var(--ctc-color-accent) 88%, #000);
   --ctc-color-accent-border: color-mix(in srgb, var(--ctc-color-accent) 80%, #000);
-  --ctc-color-meta: color-mix(
-    in srgb,
-    var(--ctc-color-muted) 85%,
-    var(--ctc-color-fg)
-  );
+  --ctc-color-meta: color-mix(in srgb, var(--ctc-color-muted) 85%, var(--ctc-color-fg));
 
   --ctc-space-1: 0.25rem;
   --ctc-space-2: 0.5rem;
@@ -65,6 +61,7 @@
   --ctc-space-4: 1rem;
   --ctc-space-5: 1.25rem;
   --ctc-space-6: 1.5rem;
+  --ctc-space-7: 1.75rem;
   --ctc-space-8: 2rem;
   --ctc-space-10: 2.5rem;
 
@@ -75,7 +72,7 @@
   --ctc-font-size-ui: 0.875rem;
   --ctc-font-size-body: 0.9375rem;
   --ctc-font-size-card-title: 1.0625rem;
-  --ctc-font-size-title: clamp(1.35rem, 2.5vw, 1.75rem);
+  --ctc-font-size-title: 1.875rem;
   --ctc-font-weight-medium: 500;
   --ctc-font-weight-semibold: 600;
   --ctc-font-weight-bold: 650;
@@ -95,14 +92,12 @@
   --ctc-focus-offset: 2px;
   --ctc-disabled-opacity: 0.45;
 
-  --ctc-shadow:
-    0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
-  --ctc-shadow-hover:
-    0 2px 4px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.1);
+  --ctc-shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  --ctc-shadow-hover: 0 2px 4px rgb(15 23 42 / 0.08), 0 12px 32px rgb(15 23 42 / 0.1);
 
-  --ctc-content-max: 56rem;
-  --ctc-explorer-max: 28rem;
-  --ctc-card-max: 22rem;
-  --ctc-lede-max: 46ch;
+  --ctc-nav-width: 14.5rem;
+  --ctc-page-max: 40rem;
+  --ctc-shell-max: 88rem;
+  --ctc-bar-height: 4.5rem;
   --ctc-thumb-size: 3.25rem;
 }

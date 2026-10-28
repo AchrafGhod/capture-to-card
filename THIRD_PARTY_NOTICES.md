@@ -10,8 +10,10 @@ The app was bootstrapped with `create-vite` (MIT).
 
 ## Project assets
 
-`src/assets/demo-capture.svg`, `public/favicon.svg`, and the files under `src/test/manual-fixtures/` are original assets for this repository.
+`src/assets/demo-capture.svg`, `src/assets/landscape-960x540.png` (collection seed), and `public/favicon.svg` are original assets for this repository.
 
-## Skeleton / motion
+## Build-phase motion styling
 
-No third-party transition library or skeleton implementation is vendored in this repository. Card skeleton/reveal behavior, if added, will be implemented in-project (see `docs/B-MOTION-STORYBOARD.md` and `docs/C-ENGINEERING-DECISIONS.md`).
+Cell-mask build reveal, dot placeholders, and media dot fields are implemented in this repository (`cell-build.css` and related morph modules). They are **not** vendored from external transition packs.
+
+Original capture-to-card morph and layout code remains under the repository [MIT License](LICENSE) where applicable.

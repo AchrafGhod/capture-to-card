@@ -1,4 +1,4 @@
-/** Shared data shape for explorer row and destination card (one item per file). */
+/** Shared data shape for file preview and destination card (one item per file). */
 export type CaptureToCardItem = {
   imageSrc: string
   title: string

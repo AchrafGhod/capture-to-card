@@ -1,6 +1,6 @@
 # Agent instructions
 
-Personal project **capture-to-card** — explorer-to-card composition (frontend only). Motion is not implemented yet.
+Personal project **CompoMotion** (repo folder `capture-to-card`) — file→card→collection→detail motion study (WAAPI + FLIP, matrix/skeleton reveal).
 
 ## Must
 
@@ -13,7 +13,8 @@ Personal project **capture-to-card** — explorer-to-card composition (frontend 
 
 - Prefer plain CSS and one animation approach (see engineering doc); do not add Motion and GSAP together.
 - Preserve visual continuity goals in `docs/B-MOTION-STORYBOARD.md`.
-- Run `pnpm run lint`, `pnpm run test`, and `pnpm run build` after substantive changes; record bundle notes in `docs/D-QUALITY-AND-PERFORMANCE.md`.
+- Run `pnpm run format:check`, `pnpm run lint`, `pnpm run test`, and `pnpm run build` after substantive changes; record bundle notes in `docs/D-QUALITY-AND-PERFORMANCE.md`.
+- Format with `pnpm run format` (Prettier; options in `.prettierrc.json`). Do not hand-edit style to fight the formatter — CI runs `format:check`.
 
 ## Must not
 
@@ -22,9 +23,9 @@ Personal project **capture-to-card** — explorer-to-card composition (frontend 
 
 ## Docs map
 
-| File | Role |
-|------|------|
-| `docs/A-PROJECT-BRIEF.md` | Intent and scope |
-| `docs/B-MOTION-STORYBOARD.md` | Motion beats |
-| `docs/C-ENGINEERING-DECISIONS.md` | Technical decisions |
+| File                                | Role                        |
+| ----------------------------------- | --------------------------- |
+| `docs/A-PROJECT-BRIEF.md`           | Intent and scope            |
+| `docs/B-MOTION-STORYBOARD.md`       | Motion beats                |
+| `docs/C-ENGINEERING-DECISIONS.md`   | Technical decisions         |
 | `docs/D-QUALITY-AND-PERFORMANCE.md` | Measurement and quality bar |

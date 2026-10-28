@@ -7,7 +7,7 @@ import {
   importLocalImageFile,
   revokeObjectUrlIfNeeded,
   type ImageDecodePort,
-} from './localImageImport'
+} from './demoImageImport'
 
 describe('buildCaptureToCardItemFromFile', () => {
   it('maps file fields onto the card item', () => {
@@ -35,13 +35,7 @@ describe('buildCaptureToCardItemFromFile', () => {
   it('uses lastModified, not an invented creation date', () => {
     const modified = Date.UTC(2023, 0, 2, 9, 0)
     const file = new File(['x'], 'a.png', { type: 'image/png', lastModified: modified })
-    const item = buildCaptureToCardItemFromFile(
-      file,
-      'blob:x',
-      'image/png',
-      10,
-      10,
-    )
+    const item = buildCaptureToCardItemFromFile(file, 'blob:x', 'image/png', 10, 10)
     expect(item.modifiedLabel).toBe(formatLastModified(modified))
     expect(item.modifiedLabel).not.toBe(formatLastModified(Date.now()))
   })

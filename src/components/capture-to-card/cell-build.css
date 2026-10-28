@@ -1,0 +1,143 @@
+/* Cell build — static dot placeholders + layered text slots (original to this repo). */
+
+:root {
+  --ctc-dot-base: color-mix(in srgb, var(--ctc-color-fg) 14%, var(--ctc-color-surface));
+  --ctc-dot-max: 5px;
+  --ctc-build-dismiss-dur: 280ms;
+  --ctc-build-dismiss-ease: ease-out;
+}
+
+.ctc-dot-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(var(--matrix-cols, 4), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--matrix-rows, 4), minmax(0, 1fr));
+  gap: 2px;
+}
+
+.ctc-dot-grid i,
+.capture-to-card__media-dot-field i {
+  display: block;
+  place-self: center;
+  width: min(100%, var(--ctc-dot-max));
+  height: min(100%, var(--ctc-dot-max));
+  border-radius: 50%;
+  background: var(--ctc-dot-base);
+}
+
+.ctc-dot-grid i.is-gap,
+.capture-to-card__media-dot-field i.is-gap {
+  visibility: hidden;
+}
+
+.capture-to-card__media-dot-field {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--ctc-media-dots-cols, 14), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--ctc-media-dots-rows, 8), minmax(0, 1fr));
+  gap: clamp(2px, 0.35vw, 5px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.capture-to-card__card.is-build-complete .capture-to-card__media-dot-field,
+.capture-to-card__card.is-build-complete .ctc-build__dots {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+.capture-to-card__card-media.is-revealed .capture-to-card__media-dot-field {
+  opacity: 0;
+}
+
+.ctc-build {
+  position: relative;
+  min-height: 1.25em;
+}
+
+.ctc-build__dots,
+.ctc-build__text {
+  position: absolute;
+  inset: 0;
+}
+
+.ctc-build__dots {
+  z-index: 1;
+  opacity: 1;
+  pointer-events: none;
+  transition:
+    opacity var(--ctc-build-dismiss-dur) var(--ctc-build-dismiss-ease),
+    filter var(--ctc-build-dismiss-dur) var(--ctc-build-dismiss-ease);
+}
+
+.ctc-build__text {
+  z-index: 2;
+  opacity: 0;
+  filter: none;
+}
+
+.ctc-build.is-building .ctc-build__text {
+  opacity: 1;
+}
+
+.ctc-build.is-revealed .ctc-build__dots {
+  opacity: 0;
+}
+
+.capture-to-card__card.is-build-complete .ctc-build.is-revealed .ctc-build__dots {
+  transition: none;
+  visibility: hidden;
+}
+
+.ctc-build.is-revealed .ctc-build__text {
+  opacity: 1;
+}
+
+.ctc-build.is-resetting .ctc-build__dots,
+.ctc-build.is-resetting .ctc-build__text {
+  transition: none !important;
+}
+
+.ctc-build--title {
+  min-height: 1.35em;
+}
+
+.ctc-build--detail {
+  min-height: 1.1em;
+}
+
+.ctc-build--title .ctc-build__dots,
+.ctc-build--detail .ctc-build__dots {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.capture-to-card__card-title .ctc-build {
+  display: block;
+}
+
+.capture-to-card__card-detail dd .ctc-build {
+  display: block;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctc-build__dots,
+  .ctc-build__text {
+    transition: none !important;
+  }
+
+  .ctc-build:not(.is-revealed) .ctc-build__text {
+    opacity: 1;
+  }
+
+  .ctc-build:not(.is-revealed) .ctc-build__dots {
+    opacity: 0;
+  }
+}

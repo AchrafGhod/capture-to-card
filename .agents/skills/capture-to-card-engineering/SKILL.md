@@ -9,25 +9,31 @@ description: >-
 
 ## Principles
 
-- Smallest structure that solves the explorer-to-card demo and a future reusable component.
-- **Import** stays outside `CaptureToCard` (`demo/localImageImport`, `DemoImport`); the component consumes a ready `CaptureToCardItem` (`captureToCardItem.ts`).
+- Smallest structure that solves the drop/choose-to-card demo and a future reusable component.
+- **Import pipeline** stays in `demo/demoImageImport.ts`; `CaptureToCard` consumes `CaptureToCardItem` plus parent-owned `presentation` (`preview` | `card`). **Cell reveal** morph starts on **Animate** (in-place build). **Grid insert** uses **Insert into collection** (FLIP only).
 - Demo defaults live in `demo/demoDefaultItem.ts`, not under `components/`.
 - One clear owner per concern (layout vs motion vs demo shell).
 - No backend, global state library, monorepo, or plugin architecture unless the user explicitly expands scope.
 - Reuse plain CSS and documented browser APIs before adding animation libraries.
 - Do not install **both** Motion and GSAP.
-- Skeleton/reveal is **in-project only** — no third-party transition-pack imports (see `docs/C-ENGINEERING-DECISIONS.md`).
+- Skeleton/reveal CSS lives in `cell-build.css` (original to this repo); see `THIRD_PARTY_NOTICES.md`.
 
 ## Before non-trivial work
 
 State briefly:
 
-| Field | Question |
-|-------|----------|
-| **Problem** | What user-visible behavior changes? |
-| **Keep** | What must stay stable (API, composition)? |
-| **Target** | What should exist after? |
-| **Out of scope** | What to avoid? |
+| Field            | Question                                  |
+| ---------------- | ----------------------------------------- |
+| **Problem**      | What user-visible behavior changes?       |
+| **Keep**         | What must stay stable (API, composition)? |
+| **Target**       | What should exist after?                  |
+| **Out of scope** | What to avoid?                            |
+
+## Formatting
+
+- **Source of truth:** `.prettierrc.json` and `.prettierignore` in the repo root.
+- Apply with `pnpm run format`; CI enforces `pnpm run format:check` before oxlint.
+- Do not maintain parallel manual style (indent, quotes, semicolons, trailing commas) — run the formatter instead.
 
 ## Decisions and docs
 
@@ -51,3 +57,13 @@ See `.agents/skills/capture-to-card-git-pr/SKILL.md`. Owner commits only.
 ## Code from elsewhere
 
 Before copying code in, check: license, coupling to another product domain, and whether a short local rewrite is cheaper.
+
+## React memoization
+
+- Default to plain functions and values. Do **not** add `useCallback`, `useMemo`, or `memo` preemptively.
+- Before memoizing, name the **consumer** (effect deps, memoized child, imperative API) and what instability would break (spurious effect runs, wasted work, stale props).
+- **React Compiler** is not assumed on: check `vite.config.ts` / build plugins for `babel-plugin-react-compiler` (or equivalent) before relying on automatic memoization. In this repo, `@vitejs/plugin-react` runs without the compiler plugin unless that changes.
+- Prefer colocating logic in the hook or effect that needs it (e.g. item-change morph interrupt inside `useFileToCardMorph`) over exporting stable callbacks solely for parent `useEffect` deps.
+- For morph and animation handles, keep refs for DOM nodes, generation tokens, and phase when listeners or async completion must read the latest value without resubscribing every render. Update phase refs in the same helper that calls `setState`, not in a trailing `useEffect`, to avoid a post-commit lag window.
+- Forward morph flyout removed (2026-10-28). Cell build prep/restore stays in `runMorphAnimations.ts` (`prepareDomForCellBuildReveal`, `finishForwardMorphTravel`, `runReducedForwardMorph`). Do not FLIP the real card shell.
+- Do not trade one `useCallback` for extra refs, microtasks, or effects unless the net complexity clearly drops.
