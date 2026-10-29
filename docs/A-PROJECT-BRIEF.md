@@ -36,6 +36,7 @@ Not a capture tool, not a full app shell, not a public transition marketplace, a
 - Desktop: file column + build (+ collection when the study needs it); narrow viewports stack vertically.
 - Catalog shell: **Library** (tile grid) and **Docs** (Introduction + Documentation). Static page state (no router). A study opens from a library tile. **Back** returns to Library.
 - Study chrome lists **Preview**, **CSS**, and **React**. Only Preview is available.
+- Phase 1 catalog: **All**, **Animations**, **Transition**, **Card**, and **Button** filters; a study can belong to multiple categories. Empty categories offer a return to All. The selected category survives navigation within the demo.
 
 ## Copy / prompt bar (roadmap)
 
@@ -59,7 +60,7 @@ Quality bar: senior-level separation (one owner per file), no hidden globals, in
 
 ## Out of scope
 
-- Search, filters, accounts, or a public marketplace.
+- Search, accounts, or a public marketplace.
 - Dynamic study registry or plugin architecture for two demos.
 - Redistributing third-party transition packs.
 

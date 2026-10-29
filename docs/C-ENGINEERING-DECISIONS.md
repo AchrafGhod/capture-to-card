@@ -104,10 +104,21 @@ Product name in the UI is **CompoMotion**. Layout and states stay in `CaptureToC
 
 ## Fonts
 
-The demo uses the **system UI stack**. Inter was listed but never loaded; the unused family name was removed so the page does not depend on a webfont.
+**Current (2026-10-29):** Inter Variable 4.1 for body/UI text, self-hosted as an unmodified WOFF2 in `src/assets/fonts/` with its SIL OFL 1.1 license. Satoshi 500/700 for display headings, loaded from Fontshare's official CSS API with `display=swap`; Inter/system UI are fallbacks. Fontshare's supplied ITF FFL 2.0 permits web use but restricts redistribution through repositories, so no Satoshi binary is committed or included in component exports. No npm font dependency.
+
+**Superseded:** system-only stack (2026-10-28).
+
+## Library presentation (current — 2026-10-29)
+
+- The supplied Library screenshot is the phase 1 visual reference; no Figma inspection was needed. Header uses the supplied original symbol and wordmark SVGs; accent `#003CFF` comes from the symbol. The symbol also serves as favicon.
+- `demoPages.ts` remains the typed catalog/copy owner. Category definitions and each study's category membership are data; `LibraryPage.tsx` renders the common filters, tile shell, result count, and empty state. There is no dynamic registry, router, or state library.
+- Cell reveal belongs to Animations + Card; Grid insert to Transition + Card. Button is intentionally empty. Filtering derives results during render; Demo owns the selected category so it survives visits to studies and Docs.
+- Plain CSS preserves the reference's static abstract tile sketches and adds hover/focus/pressed styles. Narrow layouts wrap filters, increase touch targets, and switch the grid to one column. Existing WAAPI/FLIP components and their scene orchestration stay intact.
+- Copy/export tabs remain disabled. Reusable component files do not depend on catalog metadata, brand assets, or Satoshi. Phase 2 can add export metadata alongside catalog entries without changing the Library layout.
 
 ## Git / agents
 
+- `.gitattributes` keeps text checkouts in LF, matching Prettier on Windows and other platforms; binary assets retain automatic detection. This avoids CRLF-only changes when running the required formatter.
 - Commits and pushes are **human-only** (see `AGENTS.md` and `.agents/skills/capture-to-card-git-pr/SKILL.md`).
 - Repo-local author identity: `Achraf Ghodbani` / `achrafghod.pro@gmail.com`.
 

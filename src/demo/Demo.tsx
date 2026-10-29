@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { CaptureToCard } from '../components/capture-to-card/CaptureToCard'
+import logoSrc from '../assets/brand/logo.svg'
+import wordmarkSrc from '../assets/brand/compomotion.svg'
+import { LibraryPage } from './LibraryPage'
 import type { CaptureToCardItem } from '../components/capture-to-card/captureToCardItem'
 import type { MorphPresentation } from '../components/capture-to-card/morph/useFileToCardMorph'
 import { itemMorphKey } from '../components/capture-to-card/morph/itemMorphKey'
@@ -17,6 +20,7 @@ import {
   getDemoStudy,
   headerPageFor,
   isStudyPage,
+  type DemoCategoryId,
   type DemoPageId,
   type DemoStudyId,
 } from './demoPages'
@@ -66,6 +70,7 @@ export function Demo() {
   const sessionInsertKeyRef = useRef(0)
 
   const [activePageId, setActivePageId] = useState<DemoPageId>('library')
+  const [libraryCategory, setLibraryCategory] = useState<DemoCategoryId>('all')
   const activeStudyId: DemoStudyId = isStudyPage(activePageId)
     ? activePageId
     : 'file-to-card'
@@ -228,9 +233,23 @@ export function Demo() {
           <button
             type="button"
             className="demo__brand"
+            aria-label={`${demoProductName} — Library`}
             onClick={() => handlePageChange('library')}
           >
-            {demoProductName}
+            <img
+              className="demo__brand-symbol"
+              src={logoSrc}
+              width="28"
+              height="28"
+              alt=""
+            />
+            <img
+              className="demo__brand-wordmark"
+              src={wordmarkSrc}
+              width="88"
+              height="13"
+              alt={demoProductName}
+            />
           </button>
           <nav className="demo__bar-nav" aria-label="Site">
             {demoHeaderNav.map((item) => {
@@ -255,7 +274,11 @@ export function Demo() {
         </header>
 
         {activePageId === 'library' ? (
-          <LibraryPage onOpenStudy={handlePageChange} />
+          <LibraryPage
+            category={libraryCategory}
+            onCategoryChange={setLibraryCategory}
+            onOpenStudy={handlePageChange}
+          />
         ) : activePageId === 'docs' ? (
           <DocsPage onBack={() => handlePageChange('library')} />
         ) : (
@@ -310,40 +333,6 @@ export function Demo() {
         )}
       </div>
     </div>
-  )
-}
-
-function LibraryPage({ onOpenStudy }: { onOpenStudy: (id: DemoStudyId) => void }) {
-  return (
-    <main className="demo__catalog">
-      <h1 className="demo__catalog-title">Library</h1>
-      <div className="demo__chips">
-        <span className="demo__chip demo__chip--current">All</span>
-      </div>
-      <ul className="demo__tiles">
-        {demoStudies.map((study) => (
-          <li key={study.id}>
-            <button
-              type="button"
-              className="demo__tile"
-              aria-label={study.title}
-              onClick={() => onOpenStudy(study.id)}
-            >
-              <div
-                className="demo__tile-preview"
-                data-sketch={study.id}
-                aria-hidden="true"
-              >
-                <span className="demo__sketch-a" />
-                <span className="demo__sketch-b" />
-              </div>
-              <span className="demo__tile-title">{study.title}</span>
-              <span className="demo__tile-copy">{study.tagline}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
   )
 }
 

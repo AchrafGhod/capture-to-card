@@ -10,3 +10,7 @@ pnpm-lock.yaml
 
 # Local env overrides
 *.local
+
+# Keep the supplied brand SVGs byte-for-byte identical to the source files
+src/assets/brand/*.svg
+public/favicon.svg

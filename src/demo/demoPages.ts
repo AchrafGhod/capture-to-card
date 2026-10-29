@@ -1,11 +1,22 @@
 export type DemoStudyId = 'file-to-card' | 'collection-insert'
 
+export const demoCategories = [
+  { id: 'all', title: 'All' },
+  { id: 'animations', title: 'Animations' },
+  { id: 'transition', title: 'Transition' },
+  { id: 'card', title: 'Card' },
+  { id: 'button', title: 'Button' },
+] as const
+
+export type DemoCategoryId = (typeof demoCategories)[number]['id']
+
 export type DemoStudyMeta = {
   id: DemoStudyId
   slug: string
   title: string
   tagline: string
   status: 'live' | 'soon'
+  categories: Exclude<DemoCategoryId, 'all'>[]
 }
 
 export type DemoRootPageId = 'library' | 'docs'
@@ -27,6 +38,7 @@ export const demoStudies: DemoStudyMeta[] = [
     tagline:
       'Use your own image or keep the sample, then press Animate and watch the card build one cell at a time.',
     status: 'live',
+    categories: ['animations', 'card'],
   },
   {
     id: 'collection-insert',
@@ -35,6 +47,7 @@ export const demoStudies: DemoStudyMeta[] = [
     tagline:
       'Press insert and the finished card moves into the first spot in your collection.',
     status: 'live',
+    categories: ['transition', 'card'],
   },
 ]
 
