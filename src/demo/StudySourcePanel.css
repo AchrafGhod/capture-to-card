@@ -1,0 +1,62 @@
+.study-source {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--ctc-color-border);
+  border-radius: 1.25rem;
+  background: #fff;
+}
+.study-source__filebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.study-source__filebar > div {
+  min-width: 0;
+  flex: 1;
+}
+.study-source__filename {
+  color: #596273;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.study-source select {
+  width: min(100%, 32rem);
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #dfe3eb;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #293246;
+  font: inherit;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+}
+.study-source__code {
+  max-height: 30rem;
+  overflow: auto;
+  margin: 1rem 0 0;
+  padding: 1.25rem;
+  border: 1px solid #e5e8ee;
+  border-radius: 0.875rem;
+  background: #f8f9fc;
+  color: #243048;
+  font:
+    0.8125rem/1.75 Consolas,
+    'Liberation Mono',
+    monospace;
+  tab-size: 2;
+}
+.study-source :is(button, select, pre):focus-visible {
+  outline: 2px solid #003cff;
+  outline-offset: 3px;
+}
+@media (max-width: 36rem) {
+  .study-source__filebar {
+    flex-wrap: wrap;
+  }
+  .study-source__code {
+    padding: 0.875rem;
+    max-height: 24rem;
+  }
+}

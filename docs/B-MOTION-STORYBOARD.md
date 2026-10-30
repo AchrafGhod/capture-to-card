@@ -2,6 +2,8 @@
 
 ## Studies
 
+- **Pixel Reveal** (`pixel-reveal`) — decoded image is masked by a grid of square cells; a slightly uneven wave reveals it left-to-right (default) or right-to-left. The image gently zooms out from 106% to 100% during the sweep, with the frame and pixel mask staying fixed. No card metadata build or collection insertion. Default duration ~1200ms, approximate cell size 24px; the mask disappears after completion. Replay interrupts and starts a fresh run. Resize completes the image; reduced motion displays it instantly without zoom. No looping.
+
 - **Cell reveal** (`file-to-card`) — poses A→C (in-place cell build on the build frame); no grid insert.
 - **Grid insert** (`collection-insert`) — pose D (FLIP insert + neighbor shift); **Insert into collection** only.
 

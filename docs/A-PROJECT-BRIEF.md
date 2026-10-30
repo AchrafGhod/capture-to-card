@@ -10,6 +10,8 @@ Not a capture tool, not a full app shell, not a public transition marketplace, a
 
 ## Studies (product names)
 
+**Pixel Reveal** (`pixel-reveal`) is the first phase 3 addition: a standalone image reveals through a horizontal or vertical sweep of squares. Its demo supports Replay, size, duration and direction; the reusable component accepts its own image source. Existing card studies remain independent. Copy/export UI remains phase 2 work.
+
 | Study           | Slug                | Story                                                                           | Code focus                    |
 | --------------- | ------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
 | **Cell reveal** | `file-to-card`      | Drop or **Change image** → **Animate** → in-place cell-mask reveal in **Build** | `runCellBuildReveal.ts`       |

@@ -248,6 +248,116 @@
   color: #1c1c1c;
 }
 
+.demo__tile-preview[data-sketch='pixel-reveal'] {
+  position: relative;
+  overflow: hidden;
+}
+
+.demo__tile-preview[data-sketch='pixel-reveal'] .demo__sketch-a {
+  width: 60%;
+  height: 60%;
+  border-radius: 0;
+  clip-path: polygon(
+    0 0,
+    65% 0,
+    65% 15%,
+    85% 15%,
+    85% 35%,
+    70% 35%,
+    70% 55%,
+    100% 55%,
+    100% 75%,
+    80% 75%,
+    80% 100%,
+    0 100%
+  );
+}
+
+.demo__tile-preview[data-sketch='pixel-reveal'] .demo__sketch-b {
+  display: none;
+}
+
+.demo__tile-preview[data-sketch='copy-button'] {
+  position: relative;
+}
+
+.demo__tile-preview[data-sketch='copy-button'] .demo__sketch-a {
+  width: 48%;
+  height: 24%;
+  border: 1px solid #d9d7d4;
+  background: #faf9f7;
+  border-radius: 0.75rem;
+}
+
+.demo__tile-preview[data-sketch='copy-button'] .demo__sketch-b {
+  position: absolute;
+  width: 8%;
+  height: 16%;
+  border: 2px solid #a6aaa7;
+  background: transparent;
+  border-radius: 0.2rem;
+}
+
+.demo__tile-preview[data-sketch='copy-button'] .demo__sketch-b::before {
+  content: '';
+  position: absolute;
+  inset: -6px 4px 4px -6px;
+  border: 2px solid #a6aaa7;
+  border-radius: 0.2rem;
+  background: #faf9f7;
+}
+
+.demo__tile-preview[data-sketch='logo-reveal'] .demo__sketch-a {
+  width: 32%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: url('../assets/brand/logo.svg') center / contain no-repeat;
+}
+
+.demo__tile-preview[data-sketch='logo-reveal'] .demo__sketch-b {
+  display: none;
+}
+
+.demo__tile-preview[data-sketch='skeleton-reveal'] {
+  flex-direction: column;
+  gap: 8%;
+}
+.demo__tile-preview[data-sketch='skeleton-reveal'] .demo__sketch-a {
+  width: 62%;
+  height: 40%;
+}
+.demo__tile-preview[data-sketch='skeleton-reveal'] .demo__sketch-b {
+  width: 48%;
+  height: 8%;
+  margin-right: 14%;
+}
+
+.demo__tile-preview[data-sketch='animated-checklist'] {
+  flex-direction: column;
+  gap: 10%;
+}
+.demo__tile-preview[data-sketch='animated-checklist']
+  :is(.demo__sketch-a, .demo__sketch-b) {
+  position: relative;
+  width: 42%;
+  height: 6%;
+  border-radius: 0.25rem;
+  margin-left: 10%;
+}
+.demo__tile-preview[data-sketch='animated-checklist']
+  :is(.demo__sketch-a, .demo__sketch-b)::before {
+  content: '';
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1.5px solid #bbbdbf;
+  border-radius: 0.25rem;
+  right: calc(100% + 0.625rem);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .demo__tile-copy {
   font-size: 0.65625rem;
   line-height: var(--ctc-leading-snug);

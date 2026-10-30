@@ -3,6 +3,12 @@ import { CaptureToCard } from '../components/capture-to-card/CaptureToCard'
 import logoSrc from '../assets/brand/logo.svg'
 import wordmarkSrc from '../assets/brand/compomotion.svg'
 import { LibraryPage } from './LibraryPage'
+import { PixelRevealDemo } from './PixelRevealDemo'
+import { CopyButtonDemo } from './CopyButtonDemo'
+import { LogoRevealDemo } from './LogoRevealDemo'
+import { SkeletonRevealDemo } from './SkeletonRevealDemo'
+import { AnimatedChecklistDemo } from './AnimatedChecklistDemo'
+import { StudyWorkspace } from './StudyWorkspace'
 import type { CaptureToCardItem } from '../components/capture-to-card/captureToCardItem'
 import type { MorphPresentation } from '../components/capture-to-card/morph/useFileToCardMorph'
 import { itemMorphKey } from '../components/capture-to-card/morph/itemMorphKey'
@@ -21,6 +27,7 @@ import {
   headerPageFor,
   isStudyPage,
   type DemoCategoryId,
+  type CaptureStudyId,
   type DemoPageId,
   type DemoStudyId,
 } from './demoPages'
@@ -58,7 +65,7 @@ function revokeUnreferencedBlobs(
   }
 }
 
-function presentationForStudy(studyId: DemoStudyId): MorphPresentation {
+function presentationForStudy(studyId: CaptureStudyId): MorphPresentation {
   return studyId === 'collection-insert' ? 'card' : 'preview'
 }
 
@@ -71,9 +78,12 @@ export function Demo() {
 
   const [activePageId, setActivePageId] = useState<DemoPageId>('library')
   const [libraryCategory, setLibraryCategory] = useState<DemoCategoryId>('all')
+  const [customLogoMarkup, setCustomLogoMarkup] = useState<string | null>(null)
   const activeStudyId: DemoStudyId = isStudyPage(activePageId)
     ? activePageId
     : 'file-to-card'
+  const captureStudyId: CaptureStudyId =
+    activeStudyId === 'collection-insert' ? 'collection-insert' : 'file-to-card'
   const activeStudy = getDemoStudy(activeStudyId)
   const isCellReveal = activeStudyId === 'file-to-card'
 
@@ -111,7 +121,7 @@ export function Demo() {
   }, [])
 
   const resetStudyRun = useCallback(
-    (studyId: DemoStudyId = activeStudyId) => {
+    (studyId: CaptureStudyId = captureStudyId) => {
       const previousReferenced = collectReferencedBlobUrls(item, collectionItems)
       const nextCollection = cloneDemoCollectionSeed()
       const nextReferenced = collectReferencedBlobUrls(item, nextCollection)
@@ -122,12 +132,13 @@ export function Demo() {
       setImportStatusMessage(null)
       sessionInsertKeyRef.current += 1
     },
-    [activeStudyId, collectionItems, item],
+    [captureStudyId, collectionItems, item],
   )
 
   const handlePageChange = (nextPageId: DemoPageId) => {
     if (nextPageId === activePageId) return
-    if (isStudyPage(nextPageId)) {
+    setCustomLogoMarkup(null)
+    if (nextPageId === 'file-to-card' || nextPageId === 'collection-insert') {
       resetStudyRun(nextPageId)
     }
     setActivePageId(nextPageId)
@@ -165,7 +176,7 @@ export function Demo() {
     revokeUnreferencedBlobs(previousReferenced, nextReferenced)
 
     setItem(nextItem)
-    setPresentation(presentationForStudy(activeStudyId))
+    setPresentation(presentationForStudy(captureStudyId))
     setImportStatusMessage('Image updated.')
   }
 
@@ -194,8 +205,8 @@ export function Demo() {
   }, [])
 
   const handleDemoReset = useCallback(() => {
-    resetStudyRun(activeStudyId)
-  }, [activeStudyId, resetStudyRun])
+    resetStudyRun(captureStudyId)
+  }, [captureStudyId, resetStudyRun])
 
   const collectionInsert = useMemo(
     () =>
@@ -295,39 +306,54 @@ export function Demo() {
                 {activeStudy.title}
               </h1>
               <p className="demo__lede">{activeStudy.tagline}</p>
-              <div className="demo__toolbar">
-                <StudyViewTabs />
-              </div>
-              <div
-                className="demo__stage"
-                role="region"
-                aria-label="Interactive preview"
+              <StudyWorkspace
+                key={activeStudyId}
+                studyId={activeStudyId}
+                logoMarkup={customLogoMarkup}
               >
-                <CaptureToCard
-                  key={activeStudyId}
-                  item={item}
-                  presentation={presentation}
-                  onPresentationChange={handlePresentationChange}
-                  collectionItems={collectionItems}
-                  createCardSessionLocked={createCardSessionLocked}
-                  studyScene={activeStudyId}
-                  collectionInsert={collectionInsert}
-                  onCellBuildComplete={
-                    isCellReveal ? handleCellBuildComplete : undefined
-                  }
-                  showCollection={!isCellReveal}
-                  sceneAriaLabel={`${activeStudy.title} — ${studySlug} interactive scene`}
-                  onDemoReset={handleDemoReset}
-                  importBusy={importBusy}
-                  importError={importError}
-                  importStatusMessage={importStatusMessage}
-                  fileInputId={fileInputId}
-                  fileInputRef={fileInputRef}
-                  onFileInputChange={handleFileChange}
-                  onFilesDropped={handleFiles}
-                  onImportRetry={openFilePicker}
-                />
-              </div>
+                <div
+                  className="demo__stage"
+                  role="region"
+                  aria-label="Interactive preview"
+                >
+                  {activeStudyId === 'animated-checklist' ? (
+                    <AnimatedChecklistDemo />
+                  ) : activeStudyId === 'skeleton-reveal' ? (
+                    <SkeletonRevealDemo />
+                  ) : activeStudyId === 'logo-reveal' ? (
+                    <LogoRevealDemo onMarkupChange={setCustomLogoMarkup} />
+                  ) : activeStudyId === 'copy-button' ? (
+                    <CopyButtonDemo />
+                  ) : activeStudyId === 'pixel-reveal' ? (
+                    <PixelRevealDemo />
+                  ) : (
+                    <CaptureToCard
+                      key={activeStudyId}
+                      item={item}
+                      presentation={presentation}
+                      onPresentationChange={handlePresentationChange}
+                      collectionItems={collectionItems}
+                      createCardSessionLocked={createCardSessionLocked}
+                      studyScene={captureStudyId}
+                      collectionInsert={collectionInsert}
+                      onCellBuildComplete={
+                        isCellReveal ? handleCellBuildComplete : undefined
+                      }
+                      showCollection={!isCellReveal}
+                      sceneAriaLabel={`${activeStudy.title} — ${studySlug} interactive scene`}
+                      onDemoReset={handleDemoReset}
+                      importBusy={importBusy}
+                      importError={importError}
+                      importStatusMessage={importStatusMessage}
+                      fileInputId={fileInputId}
+                      fileInputRef={fileInputRef}
+                      onFileInputChange={handleFileChange}
+                      onFilesDropped={handleFiles}
+                      onImportRetry={openFilePicker}
+                    />
+                  )}
+                </div>
+              </StudyWorkspace>
             </article>
           </main>
         )}
@@ -433,40 +459,5 @@ function Chevron({ direction }: { direction: 'left' | 'right' }) {
         />
       )}
     </svg>
-  )
-}
-
-function StudyViewTabs() {
-  return (
-    <div className="demo__view-switch" role="tablist" aria-label="Study view">
-      <button
-        type="button"
-        className="demo__view-tab demo__view-tab--active"
-        role="tab"
-        aria-selected="true"
-      >
-        Preview
-      </button>
-      <button
-        type="button"
-        className="demo__view-tab"
-        role="tab"
-        aria-selected="false"
-        disabled
-        title="Not available yet"
-      >
-        CSS
-      </button>
-      <button
-        type="button"
-        className="demo__view-tab"
-        role="tab"
-        aria-selected="false"
-        disabled
-        title="Not available yet"
-      >
-        React
-      </button>
-    </div>
   )
 }

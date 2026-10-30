@@ -1,0 +1,125 @@
+.demo__stage:has(.logo-reveal-demo) {
+  flex-shrink: 0;
+}
+
+.logo-reveal-demo {
+  width: min(100%, 35rem);
+}
+
+.logo-reveal-demo__canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 21rem;
+  padding: 2rem;
+  border: 1px solid var(--ctc-color-border);
+  border-radius: 1.25rem;
+  background: var(--ctc-color-surface);
+}
+
+.logo-reveal-demo__mark {
+  width: min(100%, 8rem);
+}
+
+.logo-reveal-demo__mark--custom {
+  width: min(100%, 16rem);
+  height: 12rem;
+}
+.logo-reveal-demo__mark--custom .cm-logo-reveal {
+  width: 100%;
+  height: 100%;
+}
+.logo-reveal-demo__import {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+}
+.logo-reveal-demo__import button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ctc-color-border);
+  border-radius: var(--ctc-radius-sm);
+  background: #fff;
+  color: var(--ctc-color-fg);
+  font: inherit;
+  cursor: pointer;
+}
+.logo-reveal-demo__import button:hover {
+  background: #f3f5ff;
+}
+.logo-reveal-demo__import button:focus-visible {
+  outline: 2px solid var(--ctc-color-accent);
+  outline-offset: 3px;
+}
+.logo-reveal-demo__import span {
+  color: var(--ctc-color-meta);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.logo-reveal-demo__error {
+  margin: 0.75rem 0 0;
+  color: var(--ctc-color-danger);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.logo-reveal-demo__controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.logo-reveal-demo__controls label {
+  display: grid;
+  gap: 0.5rem;
+  color: var(--ctc-color-fg);
+  font-size: var(--ctc-font-size-meta);
+}
+
+.logo-reveal-demo__controls :is(select, button) {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--ctc-color-border);
+  border-radius: var(--ctc-radius-sm);
+  background: var(--ctc-color-surface);
+  color: var(--ctc-color-fg);
+  font: inherit;
+  font-size: var(--ctc-font-size-ui);
+  cursor: pointer;
+}
+
+.logo-reveal-demo__controls button {
+  margin-left: auto;
+  border-color: transparent;
+  border-radius: var(--ctc-radius-pill);
+  background: var(--ctc-color-accent);
+  color: var(--ctc-color-on-accent);
+}
+
+.logo-reveal-demo__controls button:hover {
+  background: var(--ctc-color-accent-hover);
+}
+
+.logo-reveal-demo__controls :is(button, select):focus-visible {
+  outline: var(--ctc-focus-width) solid var(--ctc-color-accent);
+  outline-offset: var(--ctc-focus-offset);
+}
+
+@media (max-width: 36rem) {
+  .logo-reveal-demo__canvas {
+    min-height: 17rem;
+  }
+  .logo-reveal-demo__controls label {
+    flex: 1 1 6rem;
+  }
+  .logo-reveal-demo__controls button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,67 @@
+.pixel-reveal-demo {
+  width: min(100%, 40rem);
+}
+
+.demo__stage:has(.pixel-reveal-demo) {
+  flex-shrink: 0;
+}
+
+.pixel-reveal-demo__image {
+  overflow: hidden;
+  border-radius: var(--ctc-radius-md);
+  background: var(--ctc-color-surface);
+}
+
+.pixel-reveal-demo__controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--ctc-space-4);
+  margin-top: var(--ctc-space-6);
+}
+
+.pixel-reveal-demo__controls label {
+  display: grid;
+  gap: var(--ctc-space-2);
+  font-size: var(--ctc-font-size-meta);
+  color: var(--ctc-color-fg);
+}
+
+.pixel-reveal-demo__controls select,
+.pixel-reveal-demo__controls button {
+  min-height: 2.75rem;
+  padding: var(--ctc-space-2) var(--ctc-space-4);
+  border: 1px solid var(--ctc-color-border);
+  border-radius: var(--ctc-radius-sm);
+  background: var(--ctc-color-surface);
+  color: var(--ctc-color-fg);
+  font: inherit;
+  font-size: var(--ctc-font-size-ui);
+  cursor: pointer;
+}
+
+.pixel-reveal-demo__controls button {
+  margin-left: auto;
+  border-color: transparent;
+  border-radius: var(--ctc-radius-pill);
+  background: var(--ctc-color-accent);
+  color: var(--ctc-color-on-accent);
+}
+
+.pixel-reveal-demo__controls button:hover {
+  background: var(--ctc-color-accent-hover);
+}
+
+.pixel-reveal-demo__controls :is(button, select):focus-visible {
+  outline: var(--ctc-focus-width) solid var(--ctc-color-accent);
+  outline-offset: var(--ctc-focus-offset);
+}
+
+@media (max-width: 36rem) {
+  .pixel-reveal-demo__controls label {
+    flex: 1 1 7rem;
+  }
+  .pixel-reveal-demo__controls button {
+    width: 100%;
+  }
+}

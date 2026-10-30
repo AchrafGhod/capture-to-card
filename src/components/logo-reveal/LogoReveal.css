@@ -1,0 +1,51 @@
+.cm-logo-reveal {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.cm-logo-reveal__part {
+  stroke-width: var(--logo-reveal-stroke-width, 0.4);
+  stroke-linecap: var(--logo-reveal-linecap, round);
+  stroke-linejoin: var(--logo-reveal-linejoin, round);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  stroke-opacity: var(--logo-reveal-final-stroke, 0);
+  fill-opacity: var(--logo-reveal-final-fill, 1);
+  animation: cm-logo-reveal-draw var(--logo-reveal-duration, 1600ms)
+    cubic-bezier(0.45, 0, 0.2, 1) both;
+  animation-delay: calc(var(--part, 0) * var(--logo-reveal-stagger, 120ms));
+}
+
+@keyframes cm-logo-reveal-draw {
+  0% {
+    stroke-dashoffset: 1;
+    stroke-opacity: 0;
+    fill-opacity: 0;
+  }
+  6% {
+    stroke-opacity: 1;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    stroke-opacity: 1;
+    fill-opacity: 0;
+  }
+  80% {
+    stroke-dashoffset: 0;
+    stroke-opacity: 1;
+    fill-opacity: var(--logo-reveal-final-fill, 1);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    stroke-opacity: var(--logo-reveal-final-stroke, 0);
+    fill-opacity: var(--logo-reveal-final-fill, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-logo-reveal__part {
+    animation: none;
+  }
+}

@@ -15,7 +15,9 @@ describe('Library categories', () => {
     expect(
       screen.queryByRole('button', { name: 'Grid insert' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('1 component in Animations.')
+    expect(screen.getByRole('button', { name: 'Pixel Reveal' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'SVG Logo Reveal' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('5 components in Animations.')
 
     fireEvent.click(within(filters).getByRole('button', { name: 'Transition' }))
     expect(
@@ -36,24 +38,32 @@ describe('Library categories', () => {
     )
   })
 
-  it('offers a way back from an empty category', () => {
+  it('opens Copy Button from its category and preserves the filter on return', () => {
     render(<Demo />)
     fireEvent.click(screen.getByRole('button', { name: 'Button' }))
 
+    expect(screen.getByRole('status')).toHaveTextContent('1 component in Button.')
     expect(
-      screen.getByRole('heading', { name: 'No components in Button yet.' }),
+      screen.queryByRole('button', { name: 'Cell reveal' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Button' }))
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Copy Button' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('0 components in Button.')
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(screen.getByRole('button', { name: 'Button' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
 
-    fireEvent.click(screen.getByRole('button', { name: 'View all components' }))
+    fireEvent.click(screen.getByRole('button', { name: 'All' }))
     expect(screen.getByRole('button', { name: 'Cell reveal' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Grid insert' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(screen.getByRole('button', { name: 'All' })).toHaveFocus()
   })
 
   it('keeps the filter when returning from a study or Docs', () => {
@@ -63,8 +73,8 @@ describe('Library categories', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Grid insert' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'CSS' })).toBeDisabled()
-    expect(screen.getByRole('tab', { name: 'React' })).toBeDisabled()
+    expect(screen.getByRole('tab', { name: 'React' })).toBeEnabled()
+    expect(screen.getByRole('tab', { name: 'CSS' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(

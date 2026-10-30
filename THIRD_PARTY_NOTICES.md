@@ -14,6 +14,10 @@ The app was bootstrapped with `create-vite` (MIT).
 
 The owner supplied `src/assets/brand/logo.svg` and `src/assets/brand/compomotion.svg`; both are preserved without modification. `public/favicon.svg` uses the supplied symbol.
 
+## Generated demo imagery
+
+`src/assets/pixel-reveal-lake.webp` is an AI-generated alpine lake sample created with Imagegen for the Pixel Reveal demo, then resized and compressed locally. It is separate from the reusable component and is not a photograph of a verified location. No external stock image or third-party transition source was copied.
+
 ## Fonts
 
 - **Inter Variable 4.1**, The Inter Project Authors: unmodified `src/assets/fonts/inter-variable.woff2`, obtained from the [official Inter distribution](https://rsms.me/inter/). Licensed under the SIL Open Font License 1.1; full license in `src/assets/fonts/inter-OFL.txt`.
